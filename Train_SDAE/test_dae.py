@@ -8,15 +8,14 @@ import tensorflow as tf
 import numpy as np
 
 from os.path import join as pjoin
-from flags import FLAGS, home_out
-from dae import DAE_Layer
-from start_tensorboard import start
-from data_handler import load_data
-
-from utils import fill_feed_dict_dae
-from utils import load_data_sets_pretraining
-from utils import normalize_data, label_metadata
-from visualize import hist_comparison
+from tools.config import FLAGS, home_out
+from tools.dae import DAE_Layer
+from tools.start_tensorboard import start
+from tools.data_handler import load_data
+from tools.utils import fill_feed_dict_dae
+from tools.utils import load_data_sets_pretraining
+from tools.utils import normalize_data, label_metadata
+from tools.visualize import hist_comparison
 
 _data_dir = FLAGS.data_dir
 _output_dir = FLAGS.output_dir
@@ -28,7 +27,6 @@ def _check_and_clean_dir(d):
         shutil.rmtree(d)
     os.mkdir(d)
 
-loss_summaries = None
 
 def main():
     home = home_out('')
