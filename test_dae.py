@@ -28,7 +28,6 @@ def _check_and_clean_dir(d):
         shutil.rmtree(d)
     os.mkdir(d)
 
-loss_summaries = None
 
 def main():
     home = home_out('')
