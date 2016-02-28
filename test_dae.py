@@ -9,7 +9,7 @@ import numpy as np
 
 from os.path import join as pjoin
 from flags import FLAGS, home_out
-from dae import Dae
+from dae import DAE_Layer
 from start_tensorboard import start
 from data_handler import load_data
 
@@ -28,7 +28,7 @@ def _check_and_clean_dir(d):
         shutil.rmtree(d)
     os.mkdir(d)
 
-
+loss_summaries = None
 
 def main():
     home = home_out('')
@@ -92,31 +92,29 @@ def main():
             
             if layer == 0:
                 x = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, num_features), name='dae_input_from_layer_{0}'.format(layer))
-                dae = Dae(in_data=x, prev_layer_size=num_features, next_layer_size=FLAGS.hidden1_units, layer=layer+1, sess=sess)
+                dae = DAE_Layer(in_data=x, prev_layer_size=num_features, next_layer_size=FLAGS.hidden1_units, nth_layer=layer+1, last_layer=False)
             elif layer == 1:
                 x = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.hidden1_units), name='dae_input_from_layer_{0}'.format(layer))
-                dae = Dae(in_data=x, prev_layer_size=FLAGS.hidden1_units, next_layer_size=FLAGS.hidden2_units, layer=layer+1, sess=sess)
+                dae = DAE_Layer(in_data=x, prev_layer_size=FLAGS.hidden1_units, next_layer_size=FLAGS.hidden2_units, nth_layer=layer+1, last_layer=False)
             else:
                 x = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.hidden2_units), name='dae_input_from_layer_{0}'.format(layer))
-                dae = Dae(in_data=x, prev_layer_size=FLAGS.hidden2_units, next_layer_size=num_classes, layer=layer+1, sess=sess)
+                dae = DAE_Layer(in_data=x, prev_layer_size=FLAGS.hidden2_units, next_layer_size=num_classes, nth_layer=layer+1, last_layer=False)# or True
             
-            cost = dae.get_cost
+            cost = dae.get_loss
             
             with tf.variable_scope("pretrain_{0}".format(layer+1)):
-                train_op, g_step = dae.train(cost)
+                train_op, global_step, loss_summaries = train(cost)
                 
                 summary_dir = pjoin(FLAGS.summary_dir, 'pretraining_{0}'.format(layer+1))
                 summary_writer = tf.train.SummaryWriter(summary_dir, graph_def=sess.graph_def, flush_secs=FLAGS.flush_secs)
-                summary_vars = [dae.get_w_and_biases[0], dae.get_w_and_biases[1]]
+                summary_vars = [dae.get_w_b[0], dae.get_w_b[1]]
                         
                 hist_summarries = [tf.histogram_summary(v.op.name, v) for v in summary_vars]
-                hist_summarries.append(dae.loss_summaries)
+                hist_summarries.append(loss_summaries)
                 summary_op = tf.merge_summary(hist_summarries)
             
-                print tf.all_variables()[-1].name
-    #             print tf.all_variables().index("Training/global_step:0")
-            
-                sess.run(tf.initialize_variables([tf.all_variables()[-1]]))
+                dae.vars_to_init.append(global_step)
+                sess.run(tf.initialize_variables(dae.vars_to_init))
     
                 print "| Layer | Epoch |   Cost   |   Step   |"
                 print data.train.num_examples
@@ -128,7 +126,7 @@ def main():
                     feed_dict = fill_feed_dict_dae(data.train, x)
     
     #             if layer == 0:
-                    c, _, y, z, w, b_in, b_out = sess.run([cost, train_op, dae.get_representation_y, dae.get_reconstruction_z, dae.get_w_and_biases[0], dae.get_w_and_biases[1], dae.get_w_and_biases[2]], feed_dict=feed_dict)
+                    c, _, y, z, w, b_in, b_out = sess.run([cost, train_op, dae.get_representation_y, dae.get_reconstruction_z, dae.get_w_b[0], dae.get_w_b[1], dae.get_b_recon], feed_dict=feed_dict)
     #             else:
     #                 c, _, gs, y, z, w, b_in, b_out = sess.run([cost, train_op, g_step, dae.get_representation_y, dae.get_reconstruction_z, dae.get_w_and_biases[0], dae.get_w_and_biases[1], dae.get_w_and_biases[2]], feed_dict=fill_feed_dict_dae(data.train, x))
     
@@ -152,6 +150,27 @@ def main():
             data = load_data_sets_pretraining(np.asarray(y_all[layer]), split_only=False)
             
         print "Finished..."
+
+def train(layer, cost):
+#    with tf.name_scope("Training"):
+    # Add a scalar summary for the snapshot loss.
+    loss_summaries = tf.scalar_summary(cost.op.name, cost)
+
+    if layer is None:
+        lr = FLAGS.supervised_learning_rate
+    else:
+        lr = layer._l_rate
+
+    # Create the gradient descent optimizer with the given learning rate.
+    optimizer = tf.train.GradientDescentOptimizer(lr)
+    
+    # Create a variable to track the global step.
+    global_step = tf.Variable(0, trainable=False, name='global_step')
+    
+    # Use the optimizer to apply the gradients that minimize the loss
+    # (and also increment the global step counter) as a single training step.
+    train_op = optimizer.minimize(cost, global_step=global_step)
+    return train_op, global_step, loss_summaries
         
 if __name__ == '__main__':
     main()
