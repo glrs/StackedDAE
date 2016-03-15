@@ -6,8 +6,18 @@ import sys
 
 import tensorflow as tf
 
+WEB_OUT = '/var/www/html/'
+
 def home_out(path):
-    return pjoin(os.environ['HOME'], 'tmp', 'Allan', path)
+    return pjoin(os.environ['HOME'], 'tmp_StackedDAE', 'Allan', path)
+
+def web_out(path):
+    # Just a quick manual flag for changes between local and remote VMs
+    if False:
+        return pjoin(WEB_OUT, 'StackedDAE', path)
+    else:
+        return home_out(path)
+
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -60,7 +70,7 @@ flags.DEFINE_float('flush_secs', 120, 'Number of seconds to flush summaries')   
 # Directories
 flags.DEFINE_string('data_dir', home_out('data'), 'Directory to put the training data.')
 
-flags.DEFINE_string('output_dir', home_out('output'), 'Directory to put the output data.')
+flags.DEFINE_string('output_dir', web_out('output'), 'Directory to put the output data.')
 
 flags.DEFINE_string('summary_dir', home_out('summaries'), 'Directory to put the summary data')
 
