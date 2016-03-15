@@ -79,6 +79,9 @@ def main():
     # Get Label Metadata
     mapped_labels, label_map = label_metadata(label_matrix=labelfile, label_col=7)
     num_classes = label_map.shape[0]
+    import numpy as np
+    print label_map[:,0]
+    
     
     nHLay = FLAGS.num_hidden_layers
     nHUnits = [getattr(FLAGS, "hidden{0}_units".format(j + 1)) for j in xrange(nHLay)]
@@ -93,7 +96,9 @@ def main():
     sdae = SDAE.pretrain_sdae(input_x=data, shape=sdae_shape)
     
     data = load_data_sets(datafile_norm, mapped_labels)
-    sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes)
+    sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0]) #['broad_type']
 
 if __name__ == '__main__':
+    total_time = time.time()
     main()
+    print "Total time:", time.time() - total_time

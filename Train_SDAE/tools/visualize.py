@@ -4,10 +4,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join as pjoin
 from config import FLAGS
+from sklearn.metrics import confusion_matrix
 
 methods = [None, 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
            'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
            'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos']
+
+
+def plot_confusion_matrix(cm, target_names, title='Confusion matrix', cmap=plt.cm.Blues):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(target_names))
+    plt.xticks(tick_marks, target_names, rotation=90)
+    plt.yticks(tick_marks, target_names)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.savefig(pjoin(FLAGS.output_dir, title.replace(' ', '_') + '_CM.png'))
+    plt.close()
 
 def hist_comparison(data1, data2):
     f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
@@ -22,6 +37,7 @@ def hist_comparison(data1, data2):
 
     f.savefig(pjoin(FLAGS.output_dir, 'hist_comparison.png'))
 #     plt.show()
+    plt.close()
     
 
 def make_heatmap(data, name):
@@ -29,7 +45,7 @@ def make_heatmap(data, name):
     ax1 = f.add_axes([0.1,0.1,0.8,0.8])
     ax1.imshow(data, interpolation="none")
     f.savefig(pjoin(FLAGS.output_dir, name + '.png'))
-
+    plt.close()
 
 def make_2d_hist(data, name):
     f = plt.figure()
@@ -39,6 +55,7 @@ def make_2d_hist(data, name):
 #     plt.hexbin(data,data)
 #     plt.show()
     f.savefig(pjoin(FLAGS.output_dir, name + '.png'))
+    plt.close()
     
 # def make_2d_hexbin(data, name):
 #     f = plt.figure()
@@ -75,6 +92,7 @@ def heatmap_comparison(data1, label1, data2, label2, data3, label3):
     cax.set_frame_on(True)
 #     plt.colorbar(ax1, ax2, orientation='vertical')
     plt.show()
+    plt.close()
 #     
 #     fig = plt.figure(figsize=(6, 3.2))
 # 
