@@ -280,7 +280,7 @@ def label_metadata(label_matrix, label_col):
     mapped_labels = label_matrix.replace(label_map[[0]].values.tolist(), label_map[[1]].values.tolist())
     
     # Return the mapped labels as numpy list and the label map (unique classes and number can be obtained from map)
-    return np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],)), label_map #, unique_classes, num_classes
+    return np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],)), np.asarray(label_map) #, unique_classes, num_classes
 
 
 def write_csv(filename, data, sep='\t'):

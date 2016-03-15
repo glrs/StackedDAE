@@ -3,13 +3,18 @@ from __future__ import division
 import tensorflow as tf
 import numpy as np
 import time
+import sklearn
+
+from sklearn.metrics import precision_score, confusion_matrix
+from sklearn.metrics import recall_score, f1_score, roc_curve
+
 
 from dae import DAE_Layer
 from os.path import join as pjoin
 
 #from utils import load_data_sets_pretraining, write_csv
 from tools.utils import fill_feed_dict, fill_feed_dict_dae
-from tools.evaluate import do_eval_summary, evaluation
+from tools.evaluate import do_eval_summary, evaluation, do_eval
 from tools.config import FLAGS
 from tools.visualize import make_heatmap
 
@@ -228,7 +233,7 @@ def pretrain_sdae(input_x, shape):
 
 
 
-def finetune_sdae(sdae, input_x, n_classes):
+def finetune_sdae(sdae, input_x, n_classes, label_map):
     print "Starting Fine-tuning..."
     with sdae.session.graph.as_default():
         sess = sdae.session
@@ -236,7 +241,8 @@ def finetune_sdae(sdae, input_x, n_classes):
         n_features = sdae._net_shape[0]
         
         x_pl = tf.placeholder(tf.float32, shape=(FLAGS.batch_size, n_features), name='input_pl')
-        labels_pl = tf.placeholder(tf.int32, shape=FLAGS.batch_size, name='target_pl')
+        labels_pl = tf.placeholder(tf.int32, shape=FLAGS.batch_size, name='labels_pl')
+        labels = tf.identity(labels_pl)
         
         # Get the supervised fine tuning net
         logits = sdae.add_final_layer(x_pl)
@@ -244,7 +250,7 @@ def finetune_sdae(sdae, input_x, n_classes):
         loss = loss_supervised(logits, labels_pl, n_classes)
 
         train_op, _ = sdae.train(loss)
-        eval_correct, corr = evaluation(logits, labels_pl)
+        eval_correct, corr, a, y_pred = evaluation(logits, labels_pl)
         
         hist_summaries = [layer.get_w for layer in sdae.get_layers]
         hist_summaries.extend([layer.get_b for layer in sdae.get_layers])
@@ -265,7 +271,7 @@ def finetune_sdae(sdae, input_x, n_classes):
             
             feed_dict = fill_feed_dict(input_x.train, x_pl, labels_pl)
             
-            _, loss_value, ev_corr, c = sess.run([train_op, loss, eval_correct, corr], feed_dict=feed_dict)
+            _, loss_value, ev_corr, c, acc, y_true = sess.run([train_op, loss, eval_correct, corr, a, labels], feed_dict=feed_dict)
             
             duration = time.time() - start_time
 
@@ -275,6 +281,11 @@ def finetune_sdae(sdae, input_x, n_classes):
                 print "Loss: ", loss_value
                 print "Eval corr:", ev_corr
                 print "Correct:", c
+#                 print "Y_pred:", y_pred
+                print "Label_pred:", y_true
+                print "training accuracy:", acc
+                
+#                 y_true = np.argmax(labels_pl, 0)
                 
                 
                 print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
@@ -289,6 +300,13 @@ def finetune_sdae(sdae, input_x, n_classes):
                 summary_writer.add_summary(summary_str, step)
 
             if (step + 1) % 1000 == 0 or (step + 1) == steps:
+#                 print "Train:"
+#                 do_eval(sess, eval_correct, x_pl, labels_pl, input_x.train)
+#                 print "Test:"
+#                 do_eval(sess, eval_correct, x_pl, labels_pl, input_x.test)
+#                 print "Validation:"
+#                 do_eval(sess, eval_correct, x_pl, labels_pl, input_x.validation)
+                
                 train_sum = do_eval_summary("training_error",
                                             sess,
                                             eval_correct,
@@ -323,6 +341,10 @@ def finetune_sdae(sdae, input_x, n_classes):
             np.savetxt(pjoin(FLAGS.output_dir, 'Finetuned_Layer_' + str(n) + '_Biases.txt'), np.asarray(B), delimiter='\t')
             make_heatmap(W, 'Finetuned_weights_'+ str(n))
 
+        do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.train, title='Final_Train')
+        do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.test, title='Final_Test')
+        do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.validation, title='Final_Validation')
+        
     print "Fine-tuning Finished..."
 
 

@@ -49,8 +49,8 @@ flags.DEFINE_float('noise_3', [0.20, 'MN'], 'Noise ratio to apply on the data, a
 
 flags.DEFINE_integer('batch_size', 9, 'Batch size. Must divide evenly into the dataset sizes.')   # 100
 
-flags.DEFINE_integer('pretraining_epochs', 4, 'Number of training epochs for pretraining layers')  # 60
-flags.DEFINE_integer('finetuning_epochs', 56, 'Number of training epochs for fine tuning supervised step')
+flags.DEFINE_integer('pretraining_epochs', 20, 'Number of training epochs for pretraining layers')  # 60
+flags.DEFINE_integer('finetuning_epochs', 60, 'Number of training epochs for fine tuning supervised step')
 
 flags.DEFINE_float('zero_bound', 1.0e-9, 'Value to use as buffer to avoid numerical issues at 0')
 flags.DEFINE_float('one_bound', 1.0 - 1.0e-9, 'Value to use as buffer to avoid numerical issues at 1')
