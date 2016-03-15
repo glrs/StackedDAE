@@ -64,7 +64,7 @@ def main():
 
     # Allan's Data
     start_time = time.time()
-    datafile = load_data('RPKM', transpose=False)
+    datafile = load_data('TPM', transpose=False)
     labelfile = load_data('Labels')
     print "Data Loaded. Duration:", time.time() - start_time
 
