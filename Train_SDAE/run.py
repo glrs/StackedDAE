@@ -31,7 +31,7 @@ def main():
 
 
     if not os.path.exists(_output_dir):
-        os.mkdir(_output_dir)
+        os.makedirs(_output_dir)
     elif os.listdir(_output_dir):
         var = raw_input("Output folder is not empty. Clean it? (This will delete every file in it.) y/N: ")
         if var == 'y' or var == 'Y' or var == '1':
