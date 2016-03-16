@@ -8,7 +8,7 @@ from utils import fill_feed_dict as fill_feed_dict
 
 import sklearn
 
-from sklearn.metrics import precision_score, confusion_matrix
+from sklearn.metrics import precision_score, confusion_matrix, classification_report
 from sklearn.metrics import recall_score, f1_score, roc_curve
 
 from tools.visualize import plot_confusion_matrix as pcm
@@ -61,6 +61,8 @@ def do_eval(sess,
     """
     # And run one epoch of eval.
     true_count = 0  # Counts the number of correct predictions.
+    y_pred = []
+    y_true = []
     steps_per_epoch = data_set.num_examples // FLAGS.batch_size
     num_examples = steps_per_epoch * FLAGS.batch_size
     
@@ -70,26 +72,30 @@ def do_eval(sess,
         feed_dict = fill_feed_dict(data_set,
                                    examples_placeholder,
                                    labels_placeholder)
-        corrects, y_pred, y_true = sess.run([eval_correct, predictions, labels], feed_dict=feed_dict)
+        corrects, y_prediction, y_trues = sess.run([eval_correct, predictions, labels], feed_dict=feed_dict)
         true_count += corrects
+        y_pred += list(y_prediction)
+        y_true += list(y_trues)
         
     accuracy = true_count / num_examples
-    print(title + '-  Num examples: %d  Num correct: %d  Precision @ 1: %0.08f' %
+    print(title + ' - Num examples: %d  Num correct: %d  Precision @ 1: %0.08f' %
           (num_examples, true_count, accuracy))
-    
+
+    print("True output:", y_true)
+    print("Pred output:", y_pred)
     
     print("Precision:")
     print("\tNone:", sklearn.metrics.precision_score(y_true, y_pred, average=None))
-#     print("\tBinary:", sklearn.metrics.precision_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", sklearn.metrics.precision_score(y_true, y_pred, average='micro'))
+    print("\tBinary:", sklearn.metrics.precision_score(y_true, y_pred, average='binary'))
+#     print("\tMicro:", sklearn.metrics.average_precision_score(y_true, y_pred, average='micro'))
     print("\tMacro:", sklearn.metrics.precision_score(y_true, y_pred, average='macro'))
     print("\tWeighted:", sklearn.metrics.precision_score(y_true, y_pred, average='weighted'))
 #     print("\tSamples:", sklearn.metrics.precision_score(y_true, y_pred, average='samples'))
     print("\tAccuracy_score:", sklearn.metrics.accuracy_score(y_true, y_pred))
-    
+     
     print("Recall:")
     print("\tNone:", sklearn.metrics.recall_score(y_true, y_pred, average=None))
-#     print("\tBinary:", sklearn.metrics.recall_score(y_true, y_pred, average='binary'))
+    print("\tBinary:", sklearn.metrics.recall_score(y_true, y_pred, average='binary'))
     print("\tMicro:", sklearn.metrics.recall_score(y_true, y_pred, average='micro'))
     print("\tMacro:", sklearn.metrics.recall_score(y_true, y_pred, average='macro'))
     print("\tWeighted:", sklearn.metrics.recall_score(y_true, y_pred, average='weighted'))
@@ -97,15 +103,18 @@ def do_eval(sess,
     
     print("F1_score:")
     print("\tNone:", sklearn.metrics.f1_score(y_true, y_pred, average=None))
-#     print("\tBinary:", sklearn.metrics.f1_score(y_true, y_pred, average='binary'))
+    print("\tBinary:", sklearn.metrics.f1_score(y_true, y_pred, average='binary'))
     print("\tMicro:", sklearn.metrics.f1_score(y_true, y_pred, average='micro'))
     print("\tMacro:", sklearn.metrics.f1_score(y_true, y_pred, average='macro'))
     print("\tWeighted:", sklearn.metrics.f1_score(y_true, y_pred, average='weighted'))
 #     print("\tSamples:", sklearn.metrics.f1_score(y_true, y_pred, average='samples'))
 
+
     cm = sklearn.metrics.confusion_matrix(y_true, y_pred)
     print("confusion_matrix")
     print(cm)
+    
+    print(classification_report(y_true, y_pred, target_names=label_map))
     
     fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=0)
     print("Class 0 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
@@ -125,6 +134,7 @@ def do_eval(sess,
     print("Class 7 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
 
     pcm(cm, target_names=label_map, title=title)
+    print("=====================================================================================================")
 
 
 def do_eval_summary(tag,
