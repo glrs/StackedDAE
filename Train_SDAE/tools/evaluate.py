@@ -6,12 +6,11 @@ from config import FLAGS
 # from data import fill_feed_dict as fill_feed_dict
 from utils import fill_feed_dict as fill_feed_dict
 
-import sklearn
-
 from sklearn.metrics import precision_score, confusion_matrix, classification_report
-from sklearn.metrics import recall_score, f1_score, roc_curve
+from sklearn.metrics import recall_score, f1_score, roc_curve, accuracy_score
 
 from tools.visualize import plot_confusion_matrix as pcm
+from tools.visualize import plot_roc_curve as roc
 
 def evaluation(logits, labels):
     """Evaluate the quality of the logits at predicting the label.
@@ -81,59 +80,44 @@ def do_eval(sess,
     print(title + ' - Num examples: %d  Num correct: %d  Precision @ 1: %0.08f' %
           (num_examples, true_count, accuracy))
 
-    print("True output:", y_true)
-    print("Pred output:", y_pred)
+#     print("True output:", y_true)
+#     print("Pred output:", y_pred)
     
     print("Precision:")
-    print("\tNone:", sklearn.metrics.precision_score(y_true, y_pred, average=None))
-    print("\tBinary:", sklearn.metrics.precision_score(y_true, y_pred, average='binary'))
-#     print("\tMicro:", sklearn.metrics.average_precision_score(y_true, y_pred, average='micro'))
-    print("\tMacro:", sklearn.metrics.precision_score(y_true, y_pred, average='macro'))
-    print("\tWeighted:", sklearn.metrics.precision_score(y_true, y_pred, average='weighted'))
+    print("\tNone:", precision_score(y_true, y_pred, average=None))
+    print("\tBinary:", precision_score(y_true, y_pred, average='binary'))
+    print("\tMicro:", precision_score(y_true, y_pred, average='micro'))
+    print("\tMacro:", precision_score(y_true, y_pred, average='macro'))
+    print("\tWeighted:", precision_score(y_true, y_pred, average='weighted'))
 #     print("\tSamples:", sklearn.metrics.precision_score(y_true, y_pred, average='samples'))
-    print("\tAccuracy_score:", sklearn.metrics.accuracy_score(y_true, y_pred))
+    print("\tAccuracy_score:", accuracy_score(y_true, y_pred))
      
     print("Recall:")
-    print("\tNone:", sklearn.metrics.recall_score(y_true, y_pred, average=None))
-    print("\tBinary:", sklearn.metrics.recall_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", sklearn.metrics.recall_score(y_true, y_pred, average='micro'))
-    print("\tMacro:", sklearn.metrics.recall_score(y_true, y_pred, average='macro'))
-    print("\tWeighted:", sklearn.metrics.recall_score(y_true, y_pred, average='weighted'))
+    print("\tNone:", recall_score(y_true, y_pred, average=None))
+    print("\tBinary:", recall_score(y_true, y_pred, average='binary'))
+    print("\tMicro:", recall_score(y_true, y_pred, average='micro'))
+    print("\tMacro:", recall_score(y_true, y_pred, average='macro'))
+    print("\tWeighted:", recall_score(y_true, y_pred, average='weighted'))
 #     print("\tSamples:", sklearn.metrics.recall_score(y_true, y_pred, average='samples'))    
     
     print("F1_score:")
-    print("\tNone:", sklearn.metrics.f1_score(y_true, y_pred, average=None))
-    print("\tBinary:", sklearn.metrics.f1_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", sklearn.metrics.f1_score(y_true, y_pred, average='micro'))
-    print("\tMacro:", sklearn.metrics.f1_score(y_true, y_pred, average='macro'))
-    print("\tWeighted:", sklearn.metrics.f1_score(y_true, y_pred, average='weighted'))
+    print("\tNone:", f1_score(y_true, y_pred, average=None))
+    print("\tBinary:", f1_score(y_true, y_pred, average='binary'))
+    print("\tMicro:", f1_score(y_true, y_pred, average='micro'))
+    print("\tMacro:", f1_score(y_true, y_pred, average='macro'))
+    print("\tWeighted:", f1_score(y_true, y_pred, average='weighted'))
 #     print("\tSamples:", sklearn.metrics.f1_score(y_true, y_pred, average='samples'))
 
 
-    cm = sklearn.metrics.confusion_matrix(y_true, y_pred)
+    cm = confusion_matrix(y_true, y_pred)
     print("confusion_matrix")
     print(cm)
     
     print(classification_report(y_true, y_pred, target_names=label_map))
-    
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=0)
-    print("Class 0 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=1)
-    print("Class 1 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=2)
-    print("Class 2 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=3)
-    print("Class 3 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=4)
-    print("Class 4 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=5)
-    print("Class 5 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=6)
-    print("Class 6 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
-    fpr, tpr, tresholds = sklearn.metrics.roc_curve(y_true, y_pred, pos_label=7)
-    print("Class 7 - FPR:", fpr, "- TPR:", tpr, "- Thresholds:", tresholds)
 
     pcm(cm, target_names=label_map, title=title)
+    roc(y_pred, y_true, n_classes=len(label_map), title=title)
+    
     print("=====================================================================================================")
 
 

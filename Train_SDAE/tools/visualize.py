@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join as pjoin
 from config import FLAGS
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+from scipy import interp
 
 methods = [None, 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
            'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
@@ -23,6 +24,66 @@ def plot_confusion_matrix(cm, target_names, title='Confusion matrix', cmap=plt.c
     plt.xlabel('Predicted label')
     plt.savefig(pjoin(FLAGS.output_dir, title.replace(' ', '_') + '_CM.png'))
     plt.close()
+    
+
+def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
+    # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    tresholds = dict()
+    roc_auc = dict()
+    print("Length of label_map", n_classes)
+    for i in range(n_classes):
+        fpr[i], tpr[i], tresholds[i] = roc_curve(y_true, y_pred, pos_label=i)
+        roc_auc[i] = auc(fpr[i], tpr[i])
+        
+    # Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = roc_curve(np.asarray(y_true).ravel(), np.asarray(y_pred).ravel(), pos_label=0)
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+    # Aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+    
+    # Interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+    # Average it and compute AUC
+    mean_tpr /= n_classes
+    
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+    
+    
+    # Plot all ROC curves
+    plt.figure()
+    plt.plot(fpr["micro"], tpr["micro"],
+             label='micro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["micro"]),
+             linewidth=2)
+    
+    plt.plot(fpr["macro"], tpr["macro"],
+             label='macro-average ROC curve (area = {0:0.2f})'
+                   ''.format(roc_auc["macro"]),
+             linewidth=2)
+    
+    for i in range(n_classes):
+        plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
+                                       ''.format(i, roc_auc[i]))
+    
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Some extension of Receiver operating characteristic to multi-class')
+    plt.legend(loc="lower right")
+    
+    plt.savefig(pjoin(FLAGS.output_dir, title.replace(' ', '_') + '_ROC.png'))
+    plt.close()
+    
 
 def hist_comparison(data1, data2):
     f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
