@@ -32,7 +32,7 @@ def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
     tpr = dict()
     tresholds = dict()
     roc_auc = dict()
-    print("Length of label_map", n_classes)
+
     for i in range(n_classes):
         fpr[i], tpr[i], tresholds[i] = roc_curve(y_true, y_pred, pos_label=i)
         roc_auc[i] = auc(fpr[i], tpr[i])

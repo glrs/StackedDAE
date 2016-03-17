@@ -250,7 +250,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         loss = loss_supervised(logits, labels_pl, n_classes)
 
         train_op, _ = sdae.train(loss)
-        eval_correct, corr, a, y_pred = evaluation(logits, labels_pl)
+        eval_correct, corr, y_pred = evaluation(logits, labels_pl)
         
         hist_summaries = [layer.get_w for layer in sdae.get_layers]
         hist_summaries.extend([layer.get_b for layer in sdae.get_layers])
@@ -271,7 +271,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
             
             feed_dict = fill_feed_dict(input_x.train, x_pl, labels_pl)
             
-            _, loss_value, ev_corr, c, acc, y_true = sess.run([train_op, loss, eval_correct, corr, a, labels], feed_dict=feed_dict)
+            _, loss_value, ev_corr, c, y_true = sess.run([train_op, loss, eval_correct, corr, labels], feed_dict=feed_dict)
             
             duration = time.time() - start_time
 
@@ -283,7 +283,6 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
                 print "Correct:", c
 #                 print "Y_pred:", y_pred
                 print "Label_pred:", y_true
-                print "training accuracy:", acc
                 
 #                 y_true = np.argmax(labels_pl, 0)
                 
