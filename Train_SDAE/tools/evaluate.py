@@ -2,6 +2,8 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+import numpy as np
+
 from config import FLAGS
 # from data import fill_feed_dict as fill_feed_dict
 from utils import fill_feed_dict as fill_feed_dict
@@ -113,9 +115,15 @@ def do_eval(sess,
     print("confusion_matrix")
     print(cm)
     
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    print("Normalized confusion_matrix")
+    print(cm_normalized)
+    
     print(classification_report(y_true, y_pred, target_names=label_map))
 
     pcm(cm, target_names=label_map, title=title)
+    pcm(cm_normalized, target_names=label_map, title=title+"_Normalized")
+    
     roc(y_pred, y_true, n_classes=len(label_map), title=title)
     
     print("=====================================================================================================")

@@ -58,30 +58,32 @@ def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
     
     
     # Plot all ROC curves
-    plt.figure()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
     plt.plot(fpr["micro"], tpr["micro"],
              label='micro-average ROC curve (area = {0:0.2f})'
                    ''.format(roc_auc["micro"]),
-             linewidth=2)
+             linewidth=3, ls='--', color='red')
     
     plt.plot(fpr["macro"], tpr["macro"],
              label='macro-average ROC curve (area = {0:0.2f})'
                    ''.format(roc_auc["macro"]),
-             linewidth=2)
+             linewidth=3, ls='--', color='green')
     
     for i in range(n_classes):
         plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
                                        ''.format(i, roc_auc[i]))
     
-    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot([0, 1], [0, 1], 'k--', linewidth=2)
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Some extension of Receiver operating characteristic to multi-class')
-    plt.legend(loc="lower right")
+    plt.title('Multi-class Receiver Operating Characteristic')
+    lgd = ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     
-    plt.savefig(pjoin(FLAGS.output_dir, title.replace(' ', '_') + '_ROC.png'))
+    plt.savefig(pjoin(FLAGS.output_dir, title.replace(' ', '_') + '_ROC.png'), bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.close()
     
 
