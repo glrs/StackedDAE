@@ -178,7 +178,7 @@ def load_data_sets_pretraining(input_data, split_only=True, valid_set=False):
     data_sets = DataSets()
     
     if valid_set:
-        train_examples, test_examples = train_test_split(input_data, test_size=0.25)
+        train_examples, test_examples = train_test_split(input_data, test_size=0.20)
         train_examples, validation_examples = train_test_split(train_examples, test_size=0.05)
         data_sets.validation = DataSetPreTraining(validation_examples)
     else:
