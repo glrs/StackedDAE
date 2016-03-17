@@ -313,12 +313,13 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
                                             labels_pl,
                                             input_x.train)
                 
-                val_sum = do_eval_summary("validation_error",
-                                          sess,
-                                          eval_correct,
-                                          x_pl,
-                                          labels_pl,
-                                          input_x.validation)
+                if input_x.validation is not None:
+                    val_sum = do_eval_summary("validation_error",
+                                              sess,
+                                              eval_correct,
+                                              x_pl,
+                                              labels_pl,
+                                              input_x.validation)
                 
                 test_sum = do_eval_summary("test_error",
                                            sess,
@@ -328,7 +329,8 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
                                            input_x.test)
                 
                 summary_writer.add_summary(train_sum, step)
-                summary_writer.add_summary(val_sum, step)
+                if input_x.validation is not None:
+                    summary_writer.add_summary(val_sum, step)
                 summary_writer.add_summary(test_sum, step)
 
         for n in xrange(len(sdae._net_shape) - 1):
@@ -342,7 +344,8 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
 
         do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.train, title='Final_Train')
         do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.test, title='Final_Test')
-        do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.validation, title='Final_Validation')
+        if input_x.validation is not None:
+            do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.validation, title='Final_Validation')
         
     print "Fine-tuning Finished..."
 
