@@ -34,11 +34,11 @@ def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
     roc_auc = dict()
 
     for i in range(n_classes):
-        fpr[i], tpr[i], tresholds[i] = roc_curve(y_true, y_pred, pos_label=i)
+        fpr[i], tpr[i], tresholds[i] = roc_curve(y_true, y_pred, pos_label=i, drop_intermediate=True)
         roc_auc[i] = auc(fpr[i], tpr[i])
         
     # Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = roc_curve(np.asarray(y_true).ravel(), np.asarray(y_pred).ravel(), pos_label=0)
+    fpr["micro"], tpr["micro"], _ = roc_curve(np.asarray(y_true).ravel(), np.asarray(y_pred).ravel(), pos_label=0, drop_intermediate=True)
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
     # Aggregate all false positive rates
