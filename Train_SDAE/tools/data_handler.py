@@ -1,3 +1,5 @@
+""" Data Handler for Allan's Data-set """
+
 import pandas as pd
 import os
 import gzip

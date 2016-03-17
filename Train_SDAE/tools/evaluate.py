@@ -34,13 +34,13 @@ def evaluation(logits, labels):
     correct = tf.nn.in_top_k(logits, labels, 1)
 #     correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
     
-    accuracy = tf.reduce_mean(tf.cast(correct, "float"))
+#     accuracy = tf.reduce_mean(tf.cast(correct, "float"))
     y_p = tf.argmax(logits, 1)
 #     l_p = tf.argmax(labels, 1)
 
     
     # Return the number of true entries. Cast because originally is bool.
-    return tf.reduce_sum(tf.cast(correct, tf.int32)), correct, accuracy, y_p
+    return tf.reduce_sum(tf.cast(correct, tf.int32)), correct, y_p
 
 
 def do_eval(sess,
@@ -86,28 +86,28 @@ def do_eval(sess,
 #     print("Pred output:", y_pred)
     
     print("Precision:")
-    print("\tNone:", precision_score(y_true, y_pred, average=None))
-    print("\tBinary:", precision_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", precision_score(y_true, y_pred, average='micro'))
-    print("\tMacro:", precision_score(y_true, y_pred, average='macro'))
-    print("\tWeighted:", precision_score(y_true, y_pred, average='weighted'))
+    print("\tNone:", precision_score(y_true, y_pred, average=None, pos_label=None))
+#     print("\tBinary:", precision_score(y_true, y_pred, average='binary'))
+    print("\tMicro:", precision_score(y_true, y_pred, average='micro', pos_label=None))
+    print("\tMacro:", precision_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\tWeighted:", precision_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.precision_score(y_true, y_pred, average='samples'))
     print("\tAccuracy_score:", accuracy_score(y_true, y_pred))
      
     print("Recall:")
-    print("\tNone:", recall_score(y_true, y_pred, average=None))
-    print("\tBinary:", recall_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", recall_score(y_true, y_pred, average='micro'))
-    print("\tMacro:", recall_score(y_true, y_pred, average='macro'))
-    print("\tWeighted:", recall_score(y_true, y_pred, average='weighted'))
+    print("\tNone:", recall_score(y_true, y_pred, average=None, pos_label=None))
+#     print("\tBinary:", recall_score(y_true, y_pred, average='binary'))
+    print("\tMicro:", recall_score(y_true, y_pred, average='micro', pos_label=None))
+    print("\tMacro:", recall_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\tWeighted:", recall_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.recall_score(y_true, y_pred, average='samples'))    
     
     print("F1_score:")
-    print("\tNone:", f1_score(y_true, y_pred, average=None))
-    print("\tBinary:", f1_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", f1_score(y_true, y_pred, average='micro'))
-    print("\tMacro:", f1_score(y_true, y_pred, average='macro'))
-    print("\tWeighted:", f1_score(y_true, y_pred, average='weighted'))
+    print("\tNone:", f1_score(y_true, y_pred, average=None, pos_label=None))
+#     print("\tBinary:", f1_score(y_true, y_pred, average='binary'))
+    print("\tMicro:", f1_score(y_true, y_pred, average='micro', pos_label=None))
+    print("\tMacro:", f1_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\tWeighted:", f1_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.f1_score(y_true, y_pred, average='samples'))
 
 
