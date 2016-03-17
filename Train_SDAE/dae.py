@@ -256,6 +256,10 @@ class DAE_Layer(object):
             # Creating and applying random noise to the data. (Masking noise)
             points_to_alter = tf.random_uniform(shape=shape, dtype=tf.float32) < ratio
             
+            # if there is no noise to be added there is no need to proceed further
+            if ratio == 0.0:
+                return x_tilde, points_to_alter
+            
             if n_type == 'MN':
                 x_tilde = tf.select(points_to_alter, tf.add(tf.zeros_like(x_tilde, dtype=tf.float32),
                                                             FLAGS.zero_bound), x_tilde, name='X_tilde')

@@ -130,55 +130,65 @@ class DataSetPreTraining(object):
         return self._examples[start:end]
 
 
-def load_data_sets(input_data, labels):
+def load_data_sets(input_data, labels, valid_set=False):
     class DataSets(object):
         pass
     data_sets = DataSets()
 
-    train_examples, test_examples, train_labels, test_labels = \
-                    train_test_split(input_data, labels, test_size=0.2)
-    train_examples, validation_examples, train_labels, validation_labels = \
-                    train_test_split(train_examples, train_labels, test_size=0.05)
-
+    if valid_set:
+        train_examples, test_examples, train_labels, test_labels = \
+                        train_test_split(input_data, labels, test_size=0.2)
+        train_examples, validation_examples, train_labels, validation_labels = \
+                        train_test_split(train_examples, train_labels, test_size=0.05)
+        data_sets.validation = DataSet(validation_examples, validation_labels)
+    else:
+        train_examples, test_examples, train_labels, test_labels = \
+                        train_test_split(input_data, labels, test_size=0.3)
+        data_sets.validation = None
 
 #     validation_examples = input_data[:VALIDATION_SIZE]
 #     train_examples = input_data[VALIDATION_SIZE:]
 
     data_sets.train = DataSet(train_examples, train_labels)
-    data_sets.validation = DataSet(validation_examples, validation_labels)
     data_sets.test = DataSet(test_examples, test_labels)
     
     return data_sets
 
 
 
-def load_data_sets_pretraining(input_data, split_only=True):
+def load_data_sets_pretraining(input_data, split_only=True, valid_set=False):
     """ Load data-sets for pre-training
     Data-sets for pre-training does not include labels. It takes
     an input data-set and it splits it in train, test and validation
-    sets. Then it returns these subsets as DataSetPreTraining objects
-    which have the ability to give the data in batches (among other
-    useful functions). If split_only argument is False then it also
-    returns the whole input data-set as a DataSetPreTraining object.
+    (optional) sets. Then it returns these subsets as DataSetPreTraining
+    objects which have the ability to give the data in batches (among
+    other useful functions). If split_only argument is False then it
+    also returns the whole input data-set as a DataSetPreTraining object.
     
     Args:
         input_data: The data-set to be split.
         split_only: If True it just splits the data-set and returns its
                     subsets as DataSetPreTraining objects, otherwise it
                     also returns the data-set as DataSetPreTraining object.
+        valid_set:  Whether to create a validation set along with test
+                    and train or not (default False)
     """
     class DataSets(object):
         pass
     data_sets = DataSets()
     
-    train_examples, test_examples = train_test_split(input_data, test_size=0.2)
-    train_examples, validation_examples = train_test_split(train_examples, test_size=0.05)
+    if valid_set:
+        train_examples, test_examples = train_test_split(input_data, test_size=0.25)
+        train_examples, validation_examples = train_test_split(train_examples, test_size=0.05)
+        data_sets.validation = DataSetPreTraining(validation_examples)
+    else:
+        train_examples, test_examples = train_test_split(input_data, test_size=0.3)
+        data_sets.validation = None
 
     if not split_only:
         data_sets.all = DataSetPreTraining(input_data)
 
     data_sets.train = DataSetPreTraining(train_examples)
-    data_sets.validation = DataSetPreTraining(validation_examples)
     data_sets.test = DataSetPreTraining(test_examples)
 
     return data_sets
