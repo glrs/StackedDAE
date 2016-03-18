@@ -14,6 +14,8 @@ from sklearn.metrics import recall_score, f1_score, roc_curve, accuracy_score
 from tools.visualize import plot_confusion_matrix as pcm
 from tools.visualize import plot_roc_curve as roc
 
+np.set_printoptions(linewidth=200)
+
 def evaluation(logits, labels):
     """Evaluate the quality of the logits at predicting the label.
     
@@ -79,45 +81,46 @@ def do_eval(sess,
         y_true += list(y_trues)
         
     accuracy = true_count / num_examples
-    print(title + ' - Num examples: %d  Num correct: %d  Precision @ 1: %0.08f' %
+    print(title + ' - Num examples: %d  Num correct: %d  Accuracy_score @ 1: %0.08f' %
           (num_examples, true_count, accuracy))
 
 #     print("True output:", y_true)
 #     print("Pred output:", y_pred)
     
     print("Precision:")
-    print("\tNone:", precision_score(y_true, y_pred, average=None, pos_label=None))
+    print("\tNone: ", precision_score(y_true, y_pred, average=None, pos_label=None))
 #     print("\tBinary:", precision_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", precision_score(y_true, y_pred, average='micro', pos_label=None))
-    print("\tMacro:", precision_score(y_true, y_pred, average='macro', pos_label=None))
-    print("\tWeighted:", precision_score(y_true, y_pred, average='weighted', pos_label=None))
+    print("\tMicro: %0.08f" % precision_score(y_true, y_pred, average='micro', pos_label=None))
+    print("\tMacro: %0.08f" % precision_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\tWeighted: %0.08f" % precision_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.precision_score(y_true, y_pred, average='samples'))
-    print("\tAccuracy_score:", accuracy_score(y_true, y_pred))
+#     print("\tAccuracy_score: %0.08f" % accuracy_score(y_true, y_pred))
      
     print("Recall:")
-    print("\tNone:", recall_score(y_true, y_pred, average=None, pos_label=None))
+    print("\tNone: ", recall_score(y_true, y_pred, average=None, pos_label=None))
 #     print("\tBinary:", recall_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", recall_score(y_true, y_pred, average='micro', pos_label=None))
-    print("\tMacro:", recall_score(y_true, y_pred, average='macro', pos_label=None))
-    print("\tWeighted:", recall_score(y_true, y_pred, average='weighted', pos_label=None))
+    print("\tMicro: %0.08f" % recall_score(y_true, y_pred, average='micro', pos_label=None))
+    print("\tMacro: %0.08f" % recall_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\tWeighted: %0.08f" % recall_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.recall_score(y_true, y_pred, average='samples'))    
     
     print("F1_score:")
-    print("\tNone:", f1_score(y_true, y_pred, average=None, pos_label=None))
+    print("\tNone: ", f1_score(y_true, y_pred, average=None, pos_label=None))
 #     print("\tBinary:", f1_score(y_true, y_pred, average='binary'))
-    print("\tMicro:", f1_score(y_true, y_pred, average='micro', pos_label=None))
-    print("\tMacro:", f1_score(y_true, y_pred, average='macro', pos_label=None))
-    print("\tWeighted:", f1_score(y_true, y_pred, average='weighted', pos_label=None))
+    print("\tMicro: %0.08f" % f1_score(y_true, y_pred, average='micro', pos_label=None))
+    print("\tMacro: %0.08f" % f1_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\tWeighted: %0.08f" % f1_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.f1_score(y_true, y_pred, average='samples'))
 
 
     cm = confusion_matrix(y_true, y_pred)
-    print("confusion_matrix")
+    print("\nConfusion Matrix")
     print(cm)
     
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    print("Normalized confusion_matrix")
+    print("\nNormalized confusion_matrix")
     print(cm_normalized)
+    print("")
     
     print(classification_report(y_true, y_pred, target_names=label_map))
 
@@ -126,7 +129,7 @@ def do_eval(sess,
     
     roc(y_pred, y_true, n_classes=len(label_map), title=title)
     
-    print("=====================================================================================================")
+    print("\n=====================================================================================================\n")
 
 
 def do_eval_summary(tag,
