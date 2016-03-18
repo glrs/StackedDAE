@@ -34,20 +34,22 @@ def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
     roc_auc = dict()
 
     for i in range(n_classes):
-        fpr[i], tpr[i], tresholds[i] = roc_curve(y_true, y_pred, pos_label=i, drop_intermediate=True)
+        fpr[i], tpr[i], tresholds[i] = roc_curve(y_true, y_pred, pos_label=i, drop_intermediate=False)
         roc_auc[i] = auc(fpr[i], tpr[i])
         
     # Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = roc_curve(np.asarray(y_true).ravel(), np.asarray(y_pred).ravel(), pos_label=0, drop_intermediate=True)
-    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+#     fpr["micro"], tpr["micro"], _ = roc_curve(np.asarray(y_true).ravel(), np.asarray(y_pred).ravel(), pos_label=0, drop_intermediate=True)
+#     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
     # Aggregate all false positive rates
     all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
     
+    print("Thresholds:")
     # Interpolate all ROC curves at this points
     mean_tpr = np.zeros_like(all_fpr)
     for i in range(n_classes):
         mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+        print("Class_{0}: {1}".format(i, tresholds[i]))
 
     # Average it and compute AUC
     mean_tpr /= n_classes
@@ -61,10 +63,10 @@ def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    plt.plot(fpr["micro"], tpr["micro"],
-             label='micro-average ROC curve (area = {0:0.2f})'
-                   ''.format(roc_auc["micro"]),
-             linewidth=3, ls='--', color='red')
+#     plt.plot(fpr["micro"], tpr["micro"],
+#              label='micro-average ROC curve (area = {0:0.2f})'
+#                    ''.format(roc_auc["micro"]),
+#              linewidth=3, ls='--', color='red')
     
     plt.plot(fpr["macro"], tpr["macro"],
              label='macro-average ROC curve (area = {0:0.2f})'
