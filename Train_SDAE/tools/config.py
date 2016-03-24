@@ -48,9 +48,9 @@ flags.DEFINE_float('default_noise', [0.0, 'MN'], 'Default Noise ratio and type t
 # flags.DEFINE_float('noise_2', [0.50, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
 # flags.DEFINE_float('noise_3', [0.50, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
 
-flags.DEFINE_float('noise_1', [0.20, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
-flags.DEFINE_float('noise_2', [0.20, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
-flags.DEFINE_float('noise_3', [0.20, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
+flags.DEFINE_float('noise_1', [0.20, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
+flags.DEFINE_float('noise_2', [0.20, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
+flags.DEFINE_float('noise_3', [0.20, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
 
 """ TODO: ADD a flag for activation function (sigmoid, tanh, etc.) """
 
