@@ -112,6 +112,8 @@ def do_eval(sess,
     print("\tWeighted: %0.08f" % f1_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.f1_score(y_true, y_pred, average='samples'))
 
+    print("True Length:", len(y_true))
+    print("Prediction Length:", len(y_pred))
 
     cm = confusion_matrix(y_true, y_pred)
     print("\nConfusion Matrix")

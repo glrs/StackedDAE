@@ -245,31 +245,40 @@ class DAE_Layer(object):
             """
             
             # Safety check. If unspecified noise type given, use Masking noise instead.
-            if n_type != 'MN' and n_type != 'SP':
+            if n_type != 'MN' and n_type != 'SP' and n_type != 'TFDO':
                 n_type = 'MN'
                 print("Unknown noise type. Masking noise will be used instead.")
             
-            # It makes a copy of the data, otherwise 'target_feed' will also be affected
-    #         x_cp = np.copy(x)
-            x_tilde = tf.identity(x, name='X_tilde')
-            shape = tf.Tensor.get_shape(x_tilde)
-            # Creating and applying random noise to the data. (Masking noise)
-            points_to_alter = tf.random_uniform(shape=shape, dtype=tf.float32) < ratio
             
             # if there is no noise to be added there is no need to proceed further
             if ratio == 0.0:
-                return x_tilde, points_to_alter
+                return x_tilde, None
             
-            if n_type == 'MN':
-                x_tilde = tf.select(points_to_alter, tf.add(tf.zeros_like(x_tilde, dtype=tf.float32),
-                                                            FLAGS.zero_bound), x_tilde, name='X_tilde')
+            if n_type == 'TFDO':
+                x_tilde = tf.nn.dropout(x, keep_prob= 1 - ratio)
+#                 points_to_alter = x_tilde == 0.
+#                 print points_to_alter
+#                 x_tilde = tf.select(points_to_alter, tf.add(tf.zeros_like(x_tilde, dtype=tf.float32),
+#                                                                 FLAGS.zero_bound), x_tilde, name='X_tilde')
+#                 x_tilde[x_tilde == 0.] = tf.constant(FLAGS.zero_bound)
+            else:
+                # It makes a copy of the data, otherwise 'target_feed' will also be affected
+                x_tilde = tf.identity(x, name='X_tilde')
+                shape = tf.Tensor.get_shape(x_tilde)
+                # Creating and applying random noise to the data. (Masking noise)
+                points_to_alter = tf.random_uniform(shape=shape, dtype=tf.float32) < ratio
                 
-            elif n_type == 'SP':
-                coin_flip = np.asarray([np.random.choice([FLAGS.zero_bound, FLAGS.one_bound]) for _ in range(shape[0]) for _ in range(shape[1])]).reshape(shape)
-                x_tilde = tf.select(points_to_alter, tf.to_float(coin_flip), x_tilde, name='X_tilde')
-    
+                if n_type == 'MN':
+                    x_tilde = tf.select(points_to_alter, tf.add(tf.zeros_like(x_tilde, dtype=tf.float32),
+                                                                FLAGS.zero_bound), x_tilde, name='X_tilde')
+                    
+                elif n_type == 'SP':
+                    coin_flip = np.asarray([np.random.choice([FLAGS.zero_bound, FLAGS.one_bound]) for _ in range(shape[0]) for _ in range(shape[1])]).reshape(shape)
+                    x_tilde = tf.select(points_to_alter, tf.to_float(coin_flip), x_tilde, name='X_tilde')
+
+                
             # Also returns the 'points_to_alter' in case of applied Emphasis
-            if not FLAGS.emphasis:
+            if not FLAGS.emphasis or n_type == 'TFDO':
                 points_to_alter = None
     
             return x_tilde, points_to_alter
