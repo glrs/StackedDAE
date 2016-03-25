@@ -25,9 +25,9 @@ FLAGS = flags.FLAGS
 # Autoencoder Architecture Specific Flags
 flags.DEFINE_integer('num_hidden_layers', 3, 'Number of hidden layers')
 
-flags.DEFINE_integer('hidden1_units', 75, 'Number of units in hidden layer 1.')   # 2000
-flags.DEFINE_integer('hidden2_units', 50, 'Number of units in hidden layer 2.')
-flags.DEFINE_integer('hidden3_units', 25, 'Number of units in hidden layer 3.')
+flags.DEFINE_integer('hidden1_units', 50, 'Number of units in hidden layer 1.')   # 2000
+flags.DEFINE_integer('hidden2_units', 25, 'Number of units in hidden layer 2.')
+flags.DEFINE_integer('hidden3_units', 15, 'Number of units in hidden layer 3.')
 
 # flags.DEFINE_integer('example_features', EXAMPLE_FEATURES, 'Total number of features (genes)')  # image_pixels
 # flags.DEFINE_integer('num_classes', 10, 'Number of classes')
@@ -59,8 +59,8 @@ flags.DEFINE_float('noise_3', [0.20, 'TFDO'], 'Noise ratio to apply on the data,
 
 flags.DEFINE_integer('batch_size', 9, 'Batch size. Must divide evenly into the dataset sizes.')   # 100
 
-flags.DEFINE_integer('pretraining_epochs', 1000, 'Number of training epochs for pretraining layers')  # 60
-flags.DEFINE_integer('finetuning_epochs', 900, 'Number of training epochs for fine tuning supervised step')
+flags.DEFINE_integer('pretraining_epochs', 500, 'Number of training epochs for pretraining layers')  # 60
+flags.DEFINE_integer('finetuning_epochs', 500, 'Number of training epochs for fine tuning supervised step')
 
 flags.DEFINE_float('zero_bound', 1.0e-9, 'Value to use as buffer to avoid numerical issues at 0')
 flags.DEFINE_float('one_bound', 1.0 - 1.0e-9, 'Value to use as buffer to avoid numerical issues at 1')
