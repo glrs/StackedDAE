@@ -17,6 +17,7 @@ from tools.utils import fill_feed_dict, fill_feed_dict_dae
 from tools.evaluate import do_eval_summary, evaluation, do_eval
 from tools.config import FLAGS
 from tools.visualize import make_heatmap
+from tensorflow.python.framework.errors import FailedPreconditionError
 
 
 class Stacked_DAE(object):
@@ -75,11 +76,11 @@ class Stacked_DAE(object):
                 if not layer < self._nHLayers:
                     is_last_layer = True
 
-                self._dae_layers.append(DAE_Layer(in_data=x,
-                                                  prev_layer_size=self._net_shape[layer],
-                                                  next_layer_size=self._net_shape[layer+1],
-                                                  nth_layer=layer+1,
-                                                  last_layer=is_last_layer))
+                dae_layer = DAE_Layer(in_data=x, prev_layer_size=self._net_shape[layer],
+                                      next_layer_size=self._net_shape[layer+1], nth_layer=layer+1,
+                                      last_layer=is_last_layer)
+                
+                self._dae_layers.append(dae_layer)
 
     @property
     def session(self):
@@ -91,14 +92,42 @@ class Stacked_DAE(object):
     
     @property
     def get_weights(self):
-        return self._weights
+#         if len(self.weights) != self._nHLayers + 1:
+        self.weights = []
+        for n in xrange(self._nHLayers + 1):
+            if self.get_layers[n].get_w:
+                try:
+                    self.weights.append(self._sess.run(self.get_layers[n].get_w))
+                except FailedPreconditionError:
+                    break
+            else:
+                break
+
+        return self.weights
 
 #     def get_weights(self, layer):
 #         return self._weights[layer]
 
+#     def update_weights(self, weights):
+#         self.weights.append(weights)
+#         
+#     def update_biases(self, biases):
+#         self.biases.append(biases)
+
     @property
     def get_biases(self):
-        return self._biases
+#         if len(self.biases) != self._nHLayers + 1:
+        self.biases = []
+        for n in xrange(self._nHLayers + 1):
+            if self.get_layers[n].get_b:
+                try:
+                    self.weights.append(self._sess.run(self.get_layers[n].get_b))
+                except FailedPreconditionError:
+                    break
+            else:
+                break
+
+        return self.biases
     
 #     def get_biases(self, layer):
 #         return self._biases[layer]
@@ -348,6 +377,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
             do_eval(sess, eval_correct, y_pred, x_pl, labels_pl, label_map, input_x.validation, title='Final_Validation')
         
     print "Fine-tuning Finished..."
+    return sdae
 
 
 def loss_supervised(logits, labels, num_classes):

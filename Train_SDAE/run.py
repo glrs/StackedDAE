@@ -12,6 +12,8 @@ from tools.data_handler import load_data
 from tools.utils import load_data_sets_pretraining, load_data_sets
 from tools.utils import normalize_data, label_metadata
 
+from tools.evaluate_model import run_random_forest as run_rf
+
 _data_dir = FLAGS.data_dir
 _output_dir = FLAGS.output_dir
 _summary_dir = FLAGS.summary_dir
@@ -114,16 +116,18 @@ def main():
 #             continue
 # 
 #     datafile_norm, mapped_labels = join_with_the_rest(datafile_norm, mapped_labels.tolist(), newX, newy, label_map[:,1].tolist(), 2)
-    
+
+    '''
     from tools.ADASYN import Adasyn, all_indices
-    
+     
     a = Adasyn(datafile_norm, mapped_labels, label_map[:,1])
-    
+     
     datafile_norm, mapped_labels = a.balance_all()
     del(a)
     print("Counts:")
     for i in xrange(8):
         print(label_map[i,0], "\t", len(all_indices(i,mapped_labels.tolist())))
+    '''
     
     # Get data-sets (train, test) in a proper way
     data = load_data_sets_pretraining(datafile_norm, split_only=False)
@@ -141,10 +145,15 @@ def main():
     
     sdae = SDAE.pretrain_sdae(input_x=data, shape=sdae_shape)
     del(data)
+    
+    # In *args, weights and biases should be in this order
+    run_rf(len(sdae_shape)-2, datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
     data = load_data_sets(datafile_norm, mapped_labels)
     print("Num_Examples:", data.train.num_examples + data.test.num_examples)
     
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0]) #['broad_type']
+
+    run_rf(len(sdae_shape)-1, datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
 if __name__ == '__main__':
     total_time = time.time()
