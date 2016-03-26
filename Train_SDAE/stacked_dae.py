@@ -121,7 +121,7 @@ class Stacked_DAE(object):
         for n in xrange(self._nHLayers + 1):
             if self.get_layers[n].get_b:
                 try:
-                    self.weights.append(self._sess.run(self.get_layers[n].get_b))
+                    self.biases.append(self._sess.run(self.get_layers[n].get_b))
                 except FailedPreconditionError:
                     break
             else:
