@@ -45,20 +45,21 @@ class Adasyn(object):
         classes = np.copy(self.classes).tolist()
         classes.remove(self.majority_class)
 
+        print "Classes:", classes
+
         # Loop for all the classes except the majority
         for class_i in classes:
-            print "\nFor class: ", class_i, "in classes:", classes
+            print "\nFor class: ", class_i
             ms, ml = self.get_class_count(self.X, self.y, class_i, self.majority_class)
 
             d = self.get_d(self.X, self.y, ms, ml)
             G = self.get_G(self.X, self.y, ms, ml, self.beta)
             
             rlist = self.get_Ris(self.X, self.y, class_i, self.K)
-            print("ms, ml, d, G, len(rlist): ", ms, ml, d, G, len(rlist))
+#             print("ms, ml, d, G, len(rlist): ", ms, ml, d, G, len(rlist))
             
             new_X, new_y = self.generate_samples(rlist, self.X, self.y, G, class_i, self.K)
-            print "in classes:", classes
-            print("length of new_X, new_y:", len(new_X), len(new_y))
+            print "Length of new_X, new_y:", len(new_X), len(new_y)
 #             print("shape of new_X, new_y:", new_X.shape, new_y.shape)
             self.new_X.append(new_X)
             self.new_y.append(new_y)
@@ -66,6 +67,11 @@ class Adasyn(object):
         return self.join_all_together()
 #             X, y = self.join_with_the_rest(self.X, self.y, newX, newy, self.classes, class_i)
 
+    def save_data(self, data_filename, label_filename):
+        np.savetxt(data_filename, self.new_X, delimiter='\t')
+        del(self.new_X)
+        np.savetxt(label_filename, self.new_y, delimiter='\t')
+        del(self.new_y)
 
     # @param: X The datapoints e.g.: [f1, f2, ... ,fn]
     # @param: y the classlabels e.g: [0,1,1,1,0,...,Cn]
@@ -113,7 +119,7 @@ class Adasyn(object):
         neigh = NearestNeighbors(n_neighbors=30,algorithm = 'ball_tree')
         neigh.fit(X)
         
-        print "Shapes:", Xmin[0].shape, Xmin[0].reshape(1,-1).shape
+#         print "Shapes:", Xmin[0].shape, Xmin[0].reshape(1,-1).shape
         
         rlist = [0]*len(ymin)
         normalizedrlist = [0]*len(ymin)
@@ -150,7 +156,7 @@ class Adasyn(object):
         ymin = np.array(y)[indicesMinority]
         Xmin = np.array(X)[indicesMinority]
         
-        print "Xmin shape: ", Xmin.shape, ", len of ymin:", len(ymin)
+#         print "Xmin shape: ", Xmin.shape, ", len of ymin:", len(ymin)
         
         neigh = NearestNeighbors(n_neighbors=30,algorithm = 'ball_tree')
         neigh.fit(Xmin)
@@ -164,7 +170,7 @@ class Adasyn(object):
                 s = Xmin[k] + (Xmin[ind]-Xmin[k]) * random.random()
                 syntheticdata.append(s)
         
-        print "synthetic shape: ", np.asarray(syntheticdata).shape, ", gsum:", gsum
+#         print "synthetic shape: ", np.asarray(syntheticdata).shape, ", gsum:", gsum
         
         try:
             new_data = np.concatenate((syntheticdata, Xmin),axis=0)
@@ -179,18 +185,18 @@ class Adasyn(object):
         X_all, y_all = [], []
         classes = np.copy(self.classes).tolist()
         classes.remove(self.majority_class)
-        print "--------------------------------------------------------\n"
+        print "\nJoining Original and Synthetic datasets..."
         # Loop for all classes except 1 (the majority class)
         for i, class_i in zip(xrange(len(self.classes) - 1), classes):
             classes_no_minor = np.copy(self.classes).tolist()
             classes_no_minor.remove(class_i)
-            print i, class_i, classes_no_minor
+#             print i, class_i, classes_no_minor
 
             if i == 0:
                 indicesMajority = all_indices_multi(classes_no_minor, self.y)
                 ymaj = np.array(self.y)[indicesMajority]
                 Xmaj = np.array(self.X)[indicesMajority]
-                print "Indices_Majority:", len(indicesMajority), "len ymaj:", len(ymaj), "len Xmaj:", len(Xmaj), "len self.new_X:", len(self.new_X)
+#                 print "Indices_Majority:", len(indicesMajority), "len ymaj:", len(ymaj), "len Xmaj:", len(Xmaj), "len self.new_X:", len(self.new_X)
 
 #                 X_all = np.concatenate((Xmaj, self.new_X[i]), axis=0)
 #                 y_all = np.concatenate((ymaj, self.new_y[i]), axis=0)
@@ -198,14 +204,14 @@ class Adasyn(object):
                 indicesMajority = all_indices_multi(classes_no_minor, y_all.tolist())
                 ymaj = y_all[indicesMajority]
                 Xmaj = X_all[indicesMajority]
-                print "Indices_Majority:", len(indicesMajority), "len ymaj:", len(ymaj), "len Xmaj:", len(Xmaj), "len self.new_X:", len(self.new_X)
+#                 print "Indices_Majority:", len(indicesMajority), "len ymaj:", len(ymaj), "len Xmaj:", len(Xmaj), "len self.new_X:", len(self.new_X)
 
 #                 X_all = np.concatenate((X_all, np.concatenate((Xmaj, self.new_X[i]), axis=0)), axis=0)
 #                 y_all = np.concatenate((y_all, np.concatenate((ymaj, self.new_y[i]), axis=0)), axis=0)
             
             X_all = np.concatenate((Xmaj, self.new_X[i]), axis=0)
             y_all = np.concatenate((ymaj, self.new_y[i]), axis=0)
-            print "Length of X_all and y_all:", len(X_all), len(y_all)
+        print "Joined. Length of X_all and y_all:", len(X_all), len(y_all)
 
         return X_all, y_all
     

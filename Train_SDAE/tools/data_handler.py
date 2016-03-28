@@ -130,9 +130,8 @@ def load_data(d_type=None, label_col=None, transpose=False):
 
     # Use recursion to load and return the labels as well
     if d_type == 'Labels' or d_type is None:
-        # Get Label Metadata
-        mapped_labels, label_map = label_metadata(label_matrix=d, label_col=label_col)
-        return mapped_labels, label_map
+        # Return Label Metadata
+        return label_metadata(label_matrix=d, label_col=label_col)
     else:
         if transpose:
             return np.array(d.transpose()), load_data(label_col=label_col)

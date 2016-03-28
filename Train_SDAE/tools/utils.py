@@ -252,9 +252,9 @@ def normalize_data(x, transpose=False):
     x_norm = []
     if transpose:
         x = np.transpose(x)
-        print("Data Transposed.")
+        print("\nData Transposed.")
 
-    print "Normalizing", len(x), "Features..."
+    print "\nNormalizing", len(x), "Features..."
     for i in range(len(x)):
         x_norm.append((x[i] - np.min(x[i])) / np.float32(np.max(x[i]) - np.min(x[i])))
         if np.isnan(x_norm[i]).any():
