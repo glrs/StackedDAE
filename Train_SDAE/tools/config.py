@@ -22,6 +22,9 @@ def web_out(path):
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
+# Data Management
+flags.DEFINE_boolean('use_balanced', False, 'Use balanced data or not. If not existed they will be created.')
+
 # Autoencoder Architecture Specific Flags
 flags.DEFINE_integer('num_hidden_layers', 3, 'Number of hidden layers')
 
@@ -59,7 +62,7 @@ flags.DEFINE_float('noise_3', [0.20, 'TFDO'], 'Noise ratio to apply on the data,
 
 flags.DEFINE_integer('batch_size', 9, 'Batch size. Must divide evenly into the dataset sizes.')   # 100
 
-flags.DEFINE_integer('pretraining_epochs', 500, 'Number of training epochs for pretraining layers')  # 60
+flags.DEFINE_integer('pretraining_epochs', 50, 'Number of training epochs for pretraining layers')  # 60
 flags.DEFINE_integer('finetuning_epochs', 500, 'Number of training epochs for fine tuning supervised step')
 
 flags.DEFINE_float('zero_bound', 1.0e-9, 'Value to use as buffer to avoid numerical issues at 0')
