@@ -8,6 +8,8 @@ import numpy as np
 from os.path import join as pjoin
 from config import FLAGS
 
+# TODO: Use Dictionary instead!
+TPM = {'filtered':'TPM_filtered_data.csv', 'original':'GSE71585_RefSeq_TPM.csv', 'zipped':'GSE71585_RefSeq_TPM.csv.gz'}
 TPM = ['TPM_ready_data.csv', 'GSE71585_RefSeq_TPM.csv', 'GSE71585_RefSeq_TPM.csv.gz']
 RPKM = ['RPKM_ready_data.csv', 'GSE71585_RefSeq_RPKM.csv', 'GSE71585_RefSeq_RPKM.csv.gz']
 COUNTS = ['Counts_ready_data.csv', 'GSE71585_RefSeq_counts.csv', 'GSE71585_RefSeq_counts.csv.gz']
@@ -55,12 +57,37 @@ def order_labels(data_in, label_in, data_out=None, label_out=None):
     return data_sub_sort, label_sub_sort
 
 
+def label_metadata(label_matrix, label_col):
+    # Check whether the column value is given as index (number) or name (string) 
+    try:
+        label_col = int(label_col)
+        
+        # If given as number, take the name of the column out of it
+        label_col = label_matrix.columns[label_col]
+    except ValueError:
+        pass
+    
+    import pandas as pd
+    # Get the unique classes in the given column, and how many of them are there
+    unique_classes = pd.unique(label_matrix[label_col].ravel())
+    #num_classes = unique_classes.shape[0]
+    
+    # Map the unique n classes with a number from 0 to n  
+    label_map = pd.DataFrame({label_col: unique_classes, label_col+'_id':range(len(unique_classes))})
+    
+    # Replace the given column's values with the mapped equivalent
+    mapped_labels = label_matrix.replace(label_map[[0]].values.tolist(), label_map[[1]].values.tolist())
+    
+    # Return the mapped labels as numpy list and the label map (unique classes and number can be obtained from map)
+    return np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],)), np.asarray(label_map) #, unique_classes, num_classes
+
+
 def sort_labels(data_in):
     d = pd.read_csv(data_in, sep='\t', index_col=0)
     return d.sort_index(0)
 
 
-def load_data(d_type=None, transpose=False):
+def load_data(d_type=None, label_col=None, transpose=False):
     if d_type == 'TPM':
         data = TPM
         print("TPM file is loading...")
@@ -70,12 +97,13 @@ def load_data(d_type=None, transpose=False):
     elif d_type == 'Counts':
         data = COUNTS
         print("Counts file is loading...")
-    elif d_type == 'Labels':
+    elif d_type == 'Labels' or d_type is None and label_col is not None:
         data = LABELS
         print("Label file is loading...")
     else:
-        exit("Usage: load_data(data_type=['TPM', 'RPKM', 'Counts', 'Labels'])")
-        
+        exit("Usage: load_data(data_type=['TPM', 'RPKM', 'Counts', 'Labels', None],\
+            label_col=[int], (optional)transpose=[Boolean])")
+            
     if not os.path.exists(pjoin(FLAGS.data_dir, data[0])):
         if not os.path.exists(pjoin(FLAGS.data_dir, data[1])):
             if not os.path.exists(pjoin(FLAGS.data_dir, data[2])):
@@ -100,13 +128,15 @@ def load_data(d_type=None, transpose=False):
         d = pd.read_csv(pjoin(FLAGS.data_dir, data[0]), sep='\t', index_col=0)
         
 
-    if d_type == 'Labels':
-        return d
+    # Use recursion to load and return the labels as well
+    if d_type == 'Labels' or d_type is None:
+        # Return Label Metadata
+        return label_metadata(label_matrix=d, label_col=label_col)
     else:
         if transpose:
-            return np.array(d.transpose())
+            return np.array(d.transpose()), load_data(label_col=label_col)
         else:
-            return np.array(d)
+            return np.array(d), load_data(label_col=label_col)
 
 
         

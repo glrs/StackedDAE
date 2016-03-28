@@ -121,7 +121,7 @@ class Stacked_DAE(object):
         for n in xrange(self._nHLayers + 1):
             if self.get_layers[n].get_b:
                 try:
-                    self.weights.append(self._sess.run(self.get_layers[n].get_b))
+                    self.biases.append(self._sess.run(self.get_layers[n].get_b))
                 except FailedPreconditionError:
                     break
             else:
@@ -162,7 +162,7 @@ class Stacked_DAE(object):
 
     def add_final_layer(self, input_x):
         last_x = self.calc_last_x(input_x)
-        print "Last layer input shape:", last_x.get_shape()
+        print "Last layer added:", last_x.get_shape()
         return last_x
     
 #     def finetune_net(self):
@@ -307,11 +307,11 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
             # Write the summaries and print an overview fairly often.
             if step % 100 == 0:
                 # Print status to stdout.
-                print "Loss: ", loss_value
-                print "Eval corr:", ev_corr
-                print "Correct:", c
+                print "\nLoss: ", loss_value
+#                 print "Eval corr:", ev_corr
+#                 print "Correct:", c
 #                 print "Y_pred:", y_pred
-                print "Label_pred:", y_true
+#                 print "Label_pred:", y_true
                 
 #                 y_true = np.argmax(labels_pl, 0)
                 
@@ -328,13 +328,6 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
                 summary_writer.add_summary(summary_str, step)
 
             if (step + 1) % 1000 == 0 or (step + 1) == steps:
-#                 print "Train:"
-#                 do_eval(sess, eval_correct, x_pl, labels_pl, input_x.train)
-#                 print "Test:"
-#                 do_eval(sess, eval_correct, x_pl, labels_pl, input_x.test)
-#                 print "Validation:"
-#                 do_eval(sess, eval_correct, x_pl, labels_pl, input_x.validation)
-                
                 train_sum = do_eval_summary("training_error",
                                             sess,
                                             eval_correct,
