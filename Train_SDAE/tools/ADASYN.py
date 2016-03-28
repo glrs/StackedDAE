@@ -68,9 +68,19 @@ class Adasyn(object):
 #             X, y = self.join_with_the_rest(self.X, self.y, newX, newy, self.classes, class_i)
 
     def save_data(self, data_filename, label_filename):
-        np.savetxt(data_filename, self.new_X, delimiter='\t')
+        print type(self.new_X), type(self.new_y)
+        import csv
+
+        with open(data_filename, "wb") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(self.new_X)
+
         del(self.new_X)
-        np.savetxt(label_filename, self.new_y, delimiter='\t')
+
+        with open(label_filename, "wb") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(self.new_y)
+
         del(self.new_y)
 
     # @param: X The datapoints e.g.: [f1, f2, ... ,fn]
