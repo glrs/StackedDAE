@@ -10,6 +10,7 @@ def get_activations(exp_data, w, b):
 
 # Order of *args: first all the weights and then all the biases
 def run_random_forest(exp_data, labels, weights, biases, n_layers=None):
+#     print len(exp_data), len(labels)
     assert len(exp_data) == len(labels)
     
     # I think they should be already transposed when running the code. Will see
@@ -20,7 +21,7 @@ def run_random_forest(exp_data, labels, weights, biases, n_layers=None):
     
     for i in range(n):
         print('Weights and biases for layer: ' + str(i+1))
-        print np.asarray(weights[i]).shape, np.asarray(biases[i]).shape
+#         print np.asarray(weights[i]).shape, np.asarray(biases[i]).shape
         act = get_activations(act.T, weights[i], biases[i])
         
     rf = ensemble.RandomForestClassifier(n_estimators=1000, oob_score=True, max_depth=5)
