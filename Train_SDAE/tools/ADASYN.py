@@ -68,19 +68,18 @@ class Adasyn(object):
 #             X, y = self.join_with_the_rest(self.X, self.y, newX, newy, self.classes, class_i)
 
     def save_data(self, data_filename, label_filename):
-        print type(self.new_X), type(self.new_y)
-        import csv
+        from tools.utils import write_csv
 
-        with open(data_filename, "wb") as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(self.new_X)
-
+#         with open(data_filename, "wb") as f:
+#             writer = csv.writer(f, delimiter='\t')
+#             writer.writerows(self.new_X)
+        write_csv(data_filename, self.new_X)
         del(self.new_X)
 
-        with open(label_filename, "wb") as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(self.new_y)
-
+#         with open(label_filename, "wb") as f:
+#             writer = csv.writer(f, delimiter='\t')
+#             writer.writerows(self.new_y)
+        write_csv(label_filename, self.new_y)
         del(self.new_y)
 
     # @param: X The datapoints e.g.: [f1, f2, ... ,fn]
