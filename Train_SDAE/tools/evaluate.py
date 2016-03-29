@@ -97,33 +97,33 @@ def do_eval(sess,
 #     print("\tAccuracy_score: %0.08f" % accuracy_score(y_true, y_pred))
      
     print("Recall:")
-    print("\tNone: ", recall_score(y_true, y_pred, average=None, pos_label=None))
+#     print("\tNone: ", recall_score(y_true, y_pred, average=None, pos_label=None))
 #     print("\tBinary:", recall_score(y_true, y_pred, average='binary'))
     print("\tMicro: %0.08f" % recall_score(y_true, y_pred, average='micro', pos_label=None))
     print("\tMacro: %0.08f" % recall_score(y_true, y_pred, average='macro', pos_label=None))
     print("\tWeighted: %0.08f" % recall_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.recall_score(y_true, y_pred, average='samples'))    
     
-    print("F1_score:")
-    print("\tNone: ", f1_score(y_true, y_pred, average=None, pos_label=None))
+#     print("F1_score:")
+#     print("\tNone: ", f1_score(y_true, y_pred, average=None, pos_label=None))
 #     print("\tBinary:", f1_score(y_true, y_pred, average='binary'))
-    print("\tMicro: %0.08f" % f1_score(y_true, y_pred, average='micro', pos_label=None))
-    print("\tMacro: %0.08f" % f1_score(y_true, y_pred, average='macro', pos_label=None))
-    print("\tWeighted: %0.08f" % f1_score(y_true, y_pred, average='weighted', pos_label=None))
+#     print("\tMicro: %0.08f" % f1_score(y_true, y_pred, average='micro', pos_label=None))
+#     print("\tMacro: %0.08f" % f1_score(y_true, y_pred, average='macro', pos_label=None))
+    print("\nF1 Score (weighted): %0.08f" % f1_score(y_true, y_pred, average='weighted', pos_label=None))
 #     print("\tSamples:", sklearn.metrics.f1_score(y_true, y_pred, average='samples'))
 
-    print("True Length:", len(y_true))
-    print("Prediction Length:", len(y_pred))
+#     print("True Length:", len(y_true))
+#     print("Prediction Length:", len(y_pred))
 
     cm = confusion_matrix(y_true, y_pred)
-    print("\nConfusion Matrix")
-    print(cm)
+#     print("\nConfusion Matrix")
+#     print(cm)
     
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    print("\nNormalized confusion_matrix")
-    print(cm_normalized)
+#     print("\nNormalized confusion_matrix")
+#     print(cm_normalized)
+
     print("")
-    
     print(classification_report(y_true, y_pred, target_names=label_map))
 
     pcm(cm, target_names=label_map, title=title)

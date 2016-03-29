@@ -44,12 +44,12 @@ def plot_roc_curve(y_pred, y_true, n_classes, title='ROC_Curve'):
     # Aggregate all false positive rates
     all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
     
-    print("Thresholds:")
+#     print("Thresholds:")
     # Interpolate all ROC curves at this points
     mean_tpr = np.zeros_like(all_fpr)
     for i in range(n_classes):
         mean_tpr += interp(all_fpr, fpr[i], tpr[i])
-        print("Class_{0}: {1}".format(i, tresholds[i]))
+#         print("Class_{0}: {1}".format(i, tresholds[i]))
 
     # Average it and compute AUC
     mean_tpr /= n_classes
