@@ -13,7 +13,7 @@ from tools.start_tensorboard import start
 from tools.data_handler import load_data
 
 from tools.utils import load_data_sets_pretraining, load_data_sets
-from tools.utils import normalize_data, label_metadata
+from tools.utils import normalize_data, label_metadata, write_csv
 from tools.ADASYN import Adasyn, all_indices
 from tools.evaluate_model import run_random_forest as run_rf
 
@@ -75,14 +75,16 @@ def main():
     # labelfile = load_data('Labels')
     print("Data Loaded. Duration:", time.time() - start_time)
 
-    a = Adasyn(np.transpose(datafile), mapped_labels, label_map[:,1])
-    datafile, mapped_labels = a.balance_all()
-    a.save_data(pjoin(FLAGS.data_dir, 'TMP_balanced_data.csv'), pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
-    del(a)
+#     write_csv(pjoin(FLAGS.data_dir, "Labels_1.csv"), mapped_labels.tolist())
+
+#     a = Adasyn(datafile, mapped_labels, label_map[:,1])
+#     datafile, mapped_labels = a.balance_all()
+#     a.save_data(pjoin(FLAGS.data_dir, 'TMP_balanced_data.csv'), pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
+#     del(a)
 
     # Data Normalization
     start_time = time.time()
-    datafile_norm = normalize_data(datafile, transpose=True)
+    datafile_norm = normalize_data(datafile, transpose=False)
 #     datafile_norm = normalize_data(datafile, transpose=False)
     print("Data Normalized. Duration:", time.time() - start_time)
 
@@ -114,21 +116,42 @@ def main():
     sdae = SDAE.pretrain_sdae(input_x=data, shape=sdae_shape)
     del(data)
     
-    print("Random Forest Before Finetuning")
+#     print("Random Forest Before Finetuning")
     # In *args, weights and biases should be in this order
-    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+#     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
     
     print("\nLoading train and test data-sets for Finetuning")
     data = load_data_sets(datafile_norm, mapped_labels)
     print("\nTotal Number of Examples:", data.train.num_examples + data.test.num_examples)
     
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0]) #['broad_type']
-    print("Random Forests After Finetuning for Autoencoder layers:")
-    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
-    print("Random Forests After Finetuning for all layers:")
-    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
-
+#     print("Random Forests After Finetuning for Autoencoder layers:")
+#     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
+#     print("Random Forests After Finetuning for all layers:")
+#     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+    
+    print("\nConfiguration:")
+    print("\n{: >45}\t".format("# Hidden Layers:"), nHLay)
+    print("{: >45}\t".format("# Hidden Units:"), nHUnits)
+    noise_ratios = [getattr(FLAGS, "noise_{0}".format(i)) for i in xrange(1,nHLay+1)]
+    print("{: >45}\t".format("Noise Ratio (per layer):"), [row[0] for row in noise_ratios])
+    print("{: >45}\t".format("Noise Type (MN, SP, TFDO):"), [row[1] for row in noise_ratios])
+    if FLAGS.emphasis:
+        print("{: >45}\t".format("Emphasis (Double, Full, No):"), FLAGS.emphasis_type)
+    else:
+        print("{: >45}\t".format("Emphasis (Double, Full, No):"), "No")
+    l_rates = [getattr(FLAGS, "pre_layer{}_learning_rate".format(i)) for i in xrange(1,nHLay+1)]
+    print("{: >45}\t".format("Unsupervised Learning Rate (per layer?):"), l_rates)
+    print("{: >45}\t".format("Supervised Learning Rate:"), FLAGS.supervised_learning_rate)
+    print("{: >45}\t".format("Batch size:"), FLAGS.batch_size)
+    print("{: >45}\t".format("# Pretraining epochs:"), FLAGS.pretraining_epochs)
+    print("{: >45}\t".format("# Finetuning epochs:"), FLAGS.finetuning_epochs)
+#     Activation Function (Sigmoid, Tanh, ReLU)
+#     Weight Initialization (Sigmoid, Tanh, ReLU)
+#     Loss Function (X-Entropy, sum of sq. error)
 if __name__ == '__main__':
     total_time = time.time()
     main()
+    print("\n{}".format(time.strftime("%Y-%m-%d %H:%M:%S")))
     print("Total time:", time.time() - total_time)
+    
