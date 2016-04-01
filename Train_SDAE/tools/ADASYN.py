@@ -59,7 +59,7 @@ class Adasyn(object):
 #             print("ms, ml, d, G, len(rlist): ", ms, ml, d, G, len(rlist))
             
             new_X, new_y = self.generate_samples(rlist, self.X, self.y, G, class_i, self.K)
-            print "Length of new_X, new_y:", len(new_X), len(new_y)
+            print "Length of original_X, new_X:", ms, len(new_X)
 #             print("shape of new_X, new_y:", new_X.shape, new_y.shape)
             self.new_X.append(new_X)
             self.new_y.append(new_y)
@@ -69,11 +69,14 @@ class Adasyn(object):
 
     def save_data(self, data_filename, label_filename):
         from tools.utils import write_csv
-
-#         with open(data_filename, "wb") as f:
-#             writer = csv.writer(f, delimiter='\t')
-#             writer.writerows(self.new_X)
-        write_csv(data_filename, self.new_X)
+        import csv
+        print(type(self.new_X), "saving...")
+        with open(data_filename, "wb") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(self.new_X)
+            
+        print("Saved.")
+#         write_csv(data_filename, self.new_X)
         del(self.new_X)
 
 #         with open(label_filename, "wb") as f:
@@ -145,8 +148,12 @@ class Adasyn(object):
             
         normConst = sum(rlist)
     
-        for j in xrange(len(rlist)):
-            normalizedrlist[j] = (rlist[j]/normConst)
+        try:
+            for j in xrange(len(rlist)):
+                normalizedrlist[j] = (rlist[j]/normConst)
+        except ZeroDivisionError as e:
+            normalizedrlist = rlist
+            print(rlist)
     
         return normalizedrlist
         
