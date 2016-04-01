@@ -10,7 +10,7 @@ import numpy as np
 
 from tools.config import FLAGS, home_out
 from tools.start_tensorboard import start
-from tools.data_handler import load_data
+from tools.data_handler import load_data, load_linarsson
 
 from tools.utils import load_data_sets_pretraining, load_data_sets
 from tools.utils import normalize_data, label_metadata, write_csv
@@ -60,7 +60,7 @@ def main():
     
     """
     TODO: Next step to make it as much autonomous as possible.
-        Load data and labels(if existed) here or in the run.py.
+        Load data and labels(if existed).
         Extract information from the data and the labels for the procedure to follow.
         If there are labels existed form the NN accordingly, while if not, either
         have a predefined configuration or create it on the fly by analyzing information
@@ -71,15 +71,17 @@ def main():
 
     # Allan's Data
     start_time = time.time()
-    datafile, (mapped_labels, label_map) = load_data('TPM', label_col=7, transpose=False)
+#     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
+    datafile, (mapped_labels, label_map) = load_linarsson(transpose=False)
     # labelfile = load_data('Labels')
     print("Data Loaded. Duration:", time.time() - start_time)
-
+    np.set_printoptions(threshold=np.nan)
+#     print(mapped_labels)
 #     write_csv(pjoin(FLAGS.data_dir, "Labels_1.csv"), mapped_labels.tolist())
 
-#     a = Adasyn(datafile, mapped_labels, label_map[:,1])
+#     a = Adasyn(datafile, mapped_labels, label_map[:,1], beta=0.5)
 #     datafile, mapped_labels = a.balance_all()
-#     a.save_data(pjoin(FLAGS.data_dir, 'TMP_balanced_data.csv'), pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
+#     a.save_data(pjoin(FLAGS.data_dir, 'TPM_balanced_data.csv'), pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
 #     del(a)
 
     # Data Normalization
@@ -95,7 +97,7 @@ def main():
 #     print(label_map[:,0])
             
     print("\nLabel Counts:")
-    for i in xrange(8):
+    for i in xrange(num_classes):
         print("{: >30}\t".format(label_map[i,0]), len(all_indices(i,mapped_labels.tolist())))
 
     # Get data-sets (train, test) in a proper way
