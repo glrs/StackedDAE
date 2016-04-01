@@ -66,25 +66,43 @@ def label_metadata(label_matrix, label_col):
         label_col = label_matrix.columns[label_col]
     except ValueError:
         pass
-    
-    import pandas as pd
+
     # Get the unique classes in the given column, and how many of them are there
     unique_classes = pd.unique(label_matrix[label_col].ravel())
-    #num_classes = unique_classes.shape[0]
     
-    # Map the unique n classes with a number from 0 to n  
+    # Map the unique n classes with a number from 0 to n
     label_map = pd.DataFrame({label_col: unique_classes, label_col+'_id':range(len(unique_classes))})
     
-    # Replace the given column's values with the mapped equivalent
+    # Replace the given column values with the mapped equivalent
     mapped_labels = label_matrix.replace(label_map[[0]].values.tolist(), label_map[[1]].values.tolist())
+    print("label_matrix", label_matrix)
+    print("mapped_labels", mapped_labels)
     
-    # Return the mapped labels as numpy list and the label map (unique classes and number can be obtained from map)
+    # Return the mapped labels as list and the label map (unique classes and number can be obtained from map)
     return np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],)), np.asarray(label_map) #, unique_classes, num_classes
 
 
 def sort_labels(data_in):
     d = pd.read_csv(data_in, sep='\t', index_col=0)
     return d.sort_index(0)
+
+
+def load_linarsson(transpose=False):
+    print("Counts file is loading...")
+    data = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=[0,1,2,3,4,5,6,8,9,10], header=0, sep='\t', index_col=0)
+    data.drop(data.columns[0], axis=1,inplace=True)
+    
+    print("Label file is loading...")
+    labels = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=7, nrows=1, sep='\t', index_col=1)
+#     sub_labels = pd.read_csv("expression_mRNA_17-Aug-2014.txt", skiprows=[0,1,2,3,4,5,6,8], nrows=1, sep='\t', index_col=1)
+
+    labels.drop(labels.columns[0], axis=1, inplace=True)
+    labels = labels.transpose()
+
+    if transpose:
+        return np.array(data.transpose()) ,label_metadata(label_matrix=labels, label_col='level1class')
+    else:
+        return np.array(data) ,label_metadata(label_matrix=labels, label_col='level1class')
 
 
 def load_data(d_type=None, label_col=None, transpose=False):
@@ -131,6 +149,7 @@ def load_data(d_type=None, label_col=None, transpose=False):
     # Use recursion to load and return the labels as well
     if d_type == 'Labels' or d_type is None:
         # Return Label Metadata
+#         print()
         return label_metadata(label_matrix=d, label_col=label_col)
     else:
         if transpose:
