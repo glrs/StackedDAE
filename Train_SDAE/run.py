@@ -16,6 +16,7 @@ from tools.utils import load_data_sets_pretraining, load_data_sets
 from tools.utils import normalize_data, label_metadata, write_csv
 from tools.ADASYN import Adasyn, all_indices
 from tools.evaluate_model import run_random_forest as run_rf
+from tools.evaluate_model import plot_tSNE
 
 _data_dir = FLAGS.data_dir
 _output_dir = FLAGS.output_dir
@@ -126,11 +127,29 @@ def main():
     data = load_data_sets(datafile_norm, mapped_labels)
     print("\nTotal Number of Examples:", data.train.num_examples + data.test.num_examples)
     
+    act = np.float32(datafile_norm)
+    for layer in sdae.get_layers:
+        print(act.shape)
+        if layer.which > nHLay - 1:
+            break
+        act = sdae.get_activation(act, layer.which)
+        print(act.shape)
+        plot_tSNE(act, mapped_labels, plot_name="tSNE_pre_layer_{}".format(layer.which))
+    
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0]) #['broad_type']
 #     print("Random Forests After Finetuning for Autoencoder layers:")
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
 #     print("Random Forests After Finetuning for all layers:")
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+
+    act = np.float32(datafile_norm)
+    for layer in sdae.get_layers:
+        fixed = False if layer.which > nHLay - 1 else True
+        print("t-SNE for layer ", layer.which + 1)
+        act = sdae.get_activation(act, layer.which, use_fixed=fixed)
+#         print(act.shape)
+        plot_tSNE(act, mapped_labels, plot_name="tSNE_layer_{}".format(layer.which))
+
     
     print("\nConfiguration:")
     print("\n{: >45}\t".format("# Hidden Layers:"), nHLay)
