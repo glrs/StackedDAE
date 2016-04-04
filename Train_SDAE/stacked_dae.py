@@ -8,7 +8,6 @@ import sklearn
 from sklearn.metrics import precision_score, confusion_matrix
 from sklearn.metrics import recall_score, f1_score, roc_curve
 
-
 from dae import DAE_Layer
 from os.path import join as pjoin
 
@@ -75,6 +74,10 @@ class Stacked_DAE(object):
 
                 if not layer < self._nHLayers:
                     is_last_layer = True
+#                 if layer == self._nHLayers:
+#                     break
+                
+                print(layer, self._nHLayers)
 
                 dae_layer = DAE_Layer(in_data=x, prev_layer_size=self._net_shape[layer],
                                       next_layer_size=self._net_shape[layer+1], nth_layer=layer+1,
@@ -105,15 +108,6 @@ class Stacked_DAE(object):
 
         return self.weights
 
-#     def get_weights(self, layer):
-#         return self._weights[layer]
-
-#     def update_weights(self, weights):
-#         self.weights.append(weights)
-#         
-#     def update_biases(self, biases):
-#         self.biases.append(biases)
-
     @property
     def get_biases(self):
 #         if len(self.biases) != self._nHLayers + 1:
@@ -129,8 +123,8 @@ class Stacked_DAE(object):
 
         return self.biases
     
-#     def get_biases(self, layer):
-#         return self._biases[layer]
+    def get_activation(self, x, layer, use_fixed=True):
+        return self._sess.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
 
     def train(self, cost, layer=None):
 #         with tf.name_scope("Training"):
@@ -157,6 +151,13 @@ class Stacked_DAE(object):
         tmp = X
         for layer in self.get_layers:
             tmp = layer.clean_activation(x_in=tmp, use_fixed=False)
+#         print(tmp, self._net_shape[-2], self._net_shape[-1])
+#         dae_layer = DAE_Layer(in_data=tmp, prev_layer_size=self._net_shape[-2],
+#                                       next_layer_size=self._net_shape[-1], nth_layer=len(self._net_shape)-1,
+#                                       last_layer=True)
+# 
+#         self._dae_layers.append(dae_layer)
+#         tmp = self.get_layers[-1].clean_activation(x_in=tmp, use_fixed=False)
         
         return tmp
 
