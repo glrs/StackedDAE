@@ -1,6 +1,7 @@
-#import matplotlib as mpl
 #import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as PathEffects
+import seaborn as sns
 import numpy as np
 from os.path import join as pjoin
 from config import FLAGS
@@ -10,6 +11,38 @@ from scipy import interp
 methods = [None, 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
            'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
            'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos']
+
+
+def scatter(x, y, plot_name):
+    """ Used to plot t-SNE projections """
+
+    num_colors = len(np.unique(y))
+    # We choose a color palette with seaborn.
+    palette = np.array(sns.color_palette("hls", num_colors))
+    # We create a scatter plot.
+    f = plt.figure(figsize=(8, 8))
+    ax = plt.subplot(aspect='equal')
+    sc = ax.scatter(x[:,0], x[:,1], lw=0, s=40,
+                    c=palette[y.astype(np.int)])
+    plt.xlim(-25, 25)
+    plt.ylim(-25, 25)
+    ax.axis('off')
+    ax.axis('tight')
+    # We add the labels for each digit.
+    txts = []
+    for i in range(num_colors):
+        # Position of each label.
+        xtext, ytext = np.median(x[y == i, :], axis=0)
+#         if np.isnan(xtext) or np.isnan(ytext):
+#             break
+        txt = ax.text(xtext, ytext, str(i), fontsize=24)
+        txt.set_path_effects([
+            PathEffects.Stroke(linewidth=5, foreground="w"),
+            PathEffects.Normal()])
+        txts.append(txt)
+    
+    plt.savefig(plot_name, dpi=120)
+    plt.close()
 
 
 def plot_confusion_matrix(cm, target_names, title='Confusion matrix', cmap=plt.cm.Blues):
