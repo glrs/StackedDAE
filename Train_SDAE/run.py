@@ -129,11 +129,10 @@ def main():
     
     act = np.float32(datafile_norm)
     for layer in sdae.get_layers:
-        print(act.shape)
         if layer.which > nHLay - 1:
             break
+        print("t-SNE for layer ", layer.which + 1)
         act = sdae.get_activation(act, layer.which)
-        print(act.shape)
         plot_tSNE(act, mapped_labels, plot_name="tSNE_pre_layer_{}".format(layer.which))
     
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0]) #['broad_type']
@@ -147,7 +146,6 @@ def main():
         fixed = False if layer.which > nHLay - 1 else True
         print("t-SNE for layer ", layer.which + 1)
         act = sdae.get_activation(act, layer.which, use_fixed=fixed)
-#         print(act.shape)
         plot_tSNE(act, mapped_labels, plot_name="tSNE_layer_{}".format(layer.which))
 
     

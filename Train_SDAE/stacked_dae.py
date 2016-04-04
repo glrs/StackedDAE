@@ -76,8 +76,6 @@ class Stacked_DAE(object):
                     is_last_layer = True
 #                 if layer == self._nHLayers:
 #                     break
-                
-                print(layer, self._nHLayers)
 
                 dae_layer = DAE_Layer(in_data=x, prev_layer_size=self._net_shape[layer],
                                       next_layer_size=self._net_shape[layer+1], nth_layer=layer+1,

@@ -170,7 +170,6 @@ class DAE_Layer(object):
         assert self._layer >= 0
 
         try:
-            print("Noise for layer:", self._layer)
             return getattr(FLAGS, "noise_{0}".format(self._layer))
         except AttributeError:
             print "Noise out of bounds. Using default noise for this Layer (Layer {0})".format(self._layer)
