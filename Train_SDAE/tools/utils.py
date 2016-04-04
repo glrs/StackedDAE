@@ -130,7 +130,7 @@ class DataSetPreTraining(object):
         return self._examples[start:end]
 
 
-def load_data_sets(input_data, labels, valid_set=False):
+def load_data_sets(input_data, labels, split_only=True, valid_set=False):
     class DataSets(object):
         pass
     data_sets = DataSets()
@@ -151,6 +151,9 @@ def load_data_sets(input_data, labels, valid_set=False):
 
     data_sets.train = DataSet(train_examples, train_labels)
     data_sets.test = DataSet(test_examples, test_labels)
+    
+    if not split_only:
+        data_sets.all = DataSet(input_data)
     
     return data_sets
 

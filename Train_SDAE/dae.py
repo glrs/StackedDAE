@@ -15,7 +15,8 @@ class DAE_Layer(object):
         self._x = in_data
         
         self._l_rate = self._get_l_rate
-        self._noise = self._get_noise
+        
+        self._noise = [None, None] if self._is_last else self._get_noise
 
         self.vars_to_init = self._setup_variables()
 
@@ -169,6 +170,7 @@ class DAE_Layer(object):
         assert self._layer >= 0
 
         try:
+            print("Noise for layer:", self._layer)
             return getattr(FLAGS, "noise_{0}".format(self._layer))
         except AttributeError:
             print "Noise out of bounds. Using default noise for this Layer (Layer {0})".format(self._layer)
