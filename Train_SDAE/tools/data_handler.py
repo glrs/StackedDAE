@@ -93,16 +93,18 @@ def load_linarsson(transpose=False):
     data.drop(data.columns[0], axis=1,inplace=True)
     
     print("Label file is loading...")
-    labels = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=7, nrows=1, sep='\t', index_col=1)
+    labels = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=7, nrows=2, header=None, sep='\t', index_col=False)
 #     sub_labels = pd.read_csv("expression_mRNA_17-Aug-2014.txt", skiprows=[0,1,2,3,4,5,6,8], nrows=1, sep='\t', index_col=1)
 
-    labels.drop(labels.columns[0], axis=1, inplace=True)
     labels = labels.transpose()
-
+    labels.columns= labels.iloc[1]
+    labels.drop(labels.index[[0, 1]], inplace=True)
+    labels.set_index(labels.columns.values[0], inplace=True)
+    
     if transpose:
-        return np.array(data.transpose()) ,label_metadata(label_matrix=labels, label_col='level1class')
+        return np.array(data.transpose()), labels ,label_metadata(label_matrix=labels, label_col='level1class')
     else:
-        return np.array(data) ,label_metadata(label_matrix=labels, label_col='level1class')
+        return np.array(data), labels ,label_metadata(label_matrix=labels, label_col='level1class')
 
 
 def load_data(d_type=None, label_col=None, transpose=False):
