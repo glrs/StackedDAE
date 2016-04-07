@@ -7,6 +7,7 @@ import stacked_dae as SDAE
 
 from os.path import join as pjoin
 import numpy as np
+import pandas as pd
 
 from tools.config import FLAGS, home_out
 from tools.start_tensorboard import start
@@ -17,6 +18,13 @@ from tools.utils import normalize_data, label_metadata, write_csv
 from tools.ADASYN import Adasyn, all_indices
 from tools.evaluate_model import run_random_forest as run_rf
 from tools.evaluate_model import plot_tSNE
+
+import rpy2.robjects as robjects
+from rpy2.robjects.packages import importr
+import rpy2.robjects.numpy2ri
+from rpy2.robjects import pandas2ri
+pandas2ri.activate()
+rpy2.robjects.numpy2ri.activate()
 
 _data_dir = FLAGS.data_dir
 _output_dir = FLAGS.output_dir
@@ -72,12 +80,15 @@ def main():
 
     # Allan's Data
     start_time = time.time()
-#     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
-    datafile, (mapped_labels, label_map) = load_linarsson(transpose=False)
+    # datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
     # labelfile = load_data('Labels')
+    datafile, labels, (mapped_labels, label_map) = load_linarsson(transpose=False)
+
+#     print(mapped_labels, label_map)
+
     print("Data Loaded. Duration:", time.time() - start_time)
     np.set_printoptions(threshold=np.nan)
-#     print(mapped_labels)
+#     print(labels)
 #     write_csv(pjoin(FLAGS.data_dir, "Labels_1.csv"), mapped_labels.tolist())
 
 #     a = Adasyn(datafile, mapped_labels, label_map[:,1], beta=0.5)
@@ -122,19 +133,52 @@ def main():
 #     print("Random Forest Before Finetuning")
     # In *args, weights and biases should be in this order
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+
+#     from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage as STAP
+#     grdevices = importr('grDevices')
+    r = robjects.r
     
+    r_source = r['source']
+    r_source('../Evaluation/evaluate_model.R', **{'print.eval': True})
+#     plot_pca = robjects.globalenv['plot_pca']
+#     plot_tsne = robjects.globalenv['plot_tsne']
+    def_colors = robjects.globalenv['def_colors']
+    do_analysis = robjects.globalenv['do_analysis']
+    
+
+#     if labels.columns.values[0] == 'index':
+    labels.reset_index(level=0, inplace=True)
+    def_colors(labels)
+    del(def_colors)
+
+    act = np.float32(datafile_norm)
+    for layer in sdae.get_layers:
+        if layer.which > nHLay - 1:
+            break
+        print("Analysis for layer {}:".format(layer.which + 1))
+        act = sdae.get_activation(act, layer.which)
+        temp = pd.DataFrame(data=act, index=labels['cell_id']).reset_index(level=0)
+        do_analysis(temp, pjoin(FLAGS.output_dir, "Layer_{}".format(layer.which)))
+
+        
+#         pcafile = r.paste("Layer_{}".format(layer.which), "PCA.pdf", sep="_")
+#         grdevices.pdf(pjoin(FLAGS.output_dir, pcafile))
+#         r.par(mfrow=r.c(1,2))
+#         p = r.prcomp(act)
+#         
+#         # btype : broad_type
+#         col = typeCols[btype[r.rownames(datafile)]]
+#         r.plot(p.rx2('x'), col=col, pch=20)
+#         r.plot(p.rx2('x')[:][2:3],col=col, pch=20)
+#         
+#         grdevices.dev_off()
+        
+#         plot_tSNE(act, mapped_labels, plot_name="tSNE_pre_layer_{}".format(layer.which))
+    
+        
     print("\nLoading train and test data-sets for Finetuning")
     data = load_data_sets(datafile_norm, mapped_labels)
     print("\nTotal Number of Examples:", data.train.num_examples + data.test.num_examples)
-    
-    act = np.float32(datafile_norm)
-    for layer in sdae.get_layers:
-        print(act.shape)
-        if layer.which > nHLay - 1:
-            break
-        act = sdae.get_activation(act, layer.which)
-        print(act.shape)
-        plot_tSNE(act, mapped_labels, plot_name="tSNE_pre_layer_{}".format(layer.which))
     
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0]) #['broad_type']
 #     print("Random Forests After Finetuning for Autoencoder layers:")
@@ -145,10 +189,18 @@ def main():
     act = np.float32(datafile_norm)
     for layer in sdae.get_layers:
         fixed = False if layer.which > nHLay - 1 else True
-        print("t-SNE for layer ", layer.which + 1)
+        print("Analysis for layer {}:".format(layer.which + 1))
         act = sdae.get_activation(act, layer.which, use_fixed=fixed)
-#         print(act.shape)
-        plot_tSNE(act, mapped_labels, plot_name="tSNE_layer_{}".format(layer.which))
+        plot_tSNE(act, mapped_labels, plot_name="Python_tSNE_layer_{}".format(layer.which))
+        temp = pd.DataFrame(data=act, index=labels['cell_id']).reset_index(level=0)
+        do_analysis(temp, pjoin(FLAGS.output_dir, "Finetunned_Layer_{}".format(layer.which)))
+
+#     act = np.float32(datafile_norm)
+#     for layer in sdae.get_layers:
+#         fixed = False if layer.which > nHLay - 1 else True
+#         print("t-SNE for layer ", layer.which + 1)
+#         act = sdae.get_activation(act, layer.which, use_fixed=fixed)
+#         plot_tSNE(act, mapped_labels, plot_name="tSNE_layer_{}".format(layer.which))
 
     
     print("\nConfiguration:")
