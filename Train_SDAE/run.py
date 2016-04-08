@@ -21,10 +21,13 @@ from tools.evaluate_model import plot_tSNE
 
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
-import rpy2.robjects.numpy2ri
+from rpy2.robjects import numpy2ri
 from rpy2.robjects import pandas2ri
+from tensorflow.python.framework.errors import FailedPreconditionError
+
 pandas2ri.activate()
-rpy2.robjects.numpy2ri.activate()
+numpy2ri.activate()
+r = robjects.r
 
 _data_dir = FLAGS.data_dir
 _output_dir = FLAGS.output_dir
@@ -82,13 +85,15 @@ def main():
     start_time = time.time()
     # datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
     # labelfile = load_data('Labels')
-    datafile, labels, (mapped_labels, label_map) = load_linarsson(transpose=False)
+    datafile, labels, (mapped_labels, label_map) = load_data('Linarsson', transpose=False)
+#     datafile, labels, (mapped_labels, label_map) = load_data(dataset='Allen', d_type='TPM', label_col=9, transpose=False)
 
 #     print(mapped_labels, label_map)
+#     print(labels)
 
     print("Data Loaded. Duration:", time.time() - start_time)
     np.set_printoptions(threshold=np.nan)
-#     print(labels)
+
 #     write_csv(pjoin(FLAGS.data_dir, "Labels_1.csv"), mapped_labels.tolist())
 
 #     a = Adasyn(datafile, mapped_labels, label_map[:,1], beta=0.5)
@@ -106,11 +111,10 @@ def main():
 #   mapped_labels, label_map = label_metadata(label_matrix=labelfile, label_col=7)
     num_classes = label_map.shape[0]
 
-#     print(label_map[:,0])
             
     print("\nLabel Counts:")
     for i in xrange(num_classes):
-        print("{: >30}\t".format(label_map[i,0]), len(all_indices(i,mapped_labels.tolist())))
+        print("{: >30}\t".format(label_map[i,0]), len(all_indices(i, mapped_labels.tolist())))
 
     # Get data-sets (train, test) in a proper way
     print("\nLoading train and test data-sets for pre-training")
@@ -131,34 +135,16 @@ def main():
     del(data)
     
 #     print("Random Forest Before Finetuning")
-    # In *args, weights and biases should be in this order
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
-#     from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage as STAP
-#     grdevices = importr('grDevices')
-    r = robjects.r
-    
     r_source = r['source']
     r_source('../Evaluation/evaluate_model.R', **{'print.eval': True})
-#     plot_pca = robjects.globalenv['plot_pca']
-#     plot_tsne = robjects.globalenv['plot_tsne']
-    def_colors = robjects.globalenv['def_colors']
-    do_analysis = robjects.globalenv['do_analysis']
+
     
 
-#     if labels.columns.values[0] == 'index':
-    labels.reset_index(level=0, inplace=True)
-    def_colors(labels)
-    del(def_colors)
 
-    act = np.float32(datafile_norm)
-    for layer in sdae.get_layers:
-        if layer.which > nHLay - 1:
-            break
-        print("Analysis for layer {}:".format(layer.which + 1))
-        act = sdae.get_activation(act, layer.which)
-        temp = pd.DataFrame(data=act, index=labels['cell_id']).reset_index(level=0)
-        do_analysis(temp, pjoin(FLAGS.output_dir, "Layer_{}".format(layer.which)))
+
+    analyze(sdae, datafile_norm, labels)
 
         
 #         pcafile = r.paste("Layer_{}".format(layer.which), "PCA.pdf", sep="_")
@@ -186,14 +172,7 @@ def main():
 #     print("Random Forests After Finetuning for all layers:")
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
-    act = np.float32(datafile_norm)
-    for layer in sdae.get_layers:
-        fixed = False if layer.which > nHLay - 1 else True
-        print("Analysis for layer {}:".format(layer.which + 1))
-        act = sdae.get_activation(act, layer.which, use_fixed=fixed)
-        plot_tSNE(act, mapped_labels, plot_name="Python_tSNE_layer_{}".format(layer.which))
-        temp = pd.DataFrame(data=act, index=labels['cell_id']).reset_index(level=0)
-        do_analysis(temp, pjoin(FLAGS.output_dir, "Finetunned_Layer_{}".format(layer.which)))
+    analyze(sdae, datafile_norm, labels)
 
 #     act = np.float32(datafile_norm)
 #     for layer in sdae.get_layers:
@@ -222,6 +201,26 @@ def main():
 #     Activation Function (Sigmoid, Tanh, ReLU)
 #     Weight Initialization (Sigmoid, Tanh, ReLU)
 #     Loss Function (X-Entropy, sum of sq. error)
+
+
+def analyze(sdae, datafile_norm, labels):
+    def_colors = robjects.globalenv['def_colors']
+    labels.reset_index(level=0, inplace=True)
+    def_colors(labels)
+    do_analysis = robjects.globalenv['do_analysis']
+    act = np.float32(datafile_norm)
+    for layer in sdae.get_layers:
+        fixed = False if layer.which > sdae.nHLayers - 1 else True
+#         if layer.which > nHLay - 1:
+#             break
+        print("Analysis for layer {}:".format(layer.which + 1))
+        try:
+            act = sdae.get_activation(act, layer.which, use_fixed=fixed)
+            temp = pd.DataFrame(data=act, index=labels[[0]]).reset_index(level=0)
+            do_analysis(temp, pjoin(FLAGS.output_dir, "Layer_{}".format(layer.which)))
+        except FailedPreconditionError as e:
+            break
+
 if __name__ == '__main__':
     total_time = time.time()
     main()
