@@ -40,7 +40,7 @@ class Stacked_DAE(object):
         """
         self._sess = session
         self._net_shape = net_shape
-        self._nHLayers = len(self._net_shape) - 2
+        self.nHLayers = len(self._net_shape) - 2
         self._selfish_layers = selfish_layers
         self.loss_summaries = None
         
@@ -59,7 +59,7 @@ class Stacked_DAE(object):
 
     def _create_network(self):
         is_last_layer = False
-        for layer in xrange(self._nHLayers + 1):
+        for layer in xrange(self.nHLayers + 1):
             with tf.name_scope("Layer_{0}".format(layer)):
                 if self._selfish_layers: 
                     x = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, self._net_shape[layer]), name='dae_input_from_layer_{0}'.format(layer))
@@ -72,9 +72,9 @@ class Stacked_DAE(object):
                         x = self._dae_layers[layer-1].clean_activation()
 #                         x = self._dae_layers[layer-1].get_representation_y
 
-                if not layer < self._nHLayers:
+                if not layer < self.nHLayers:
                     is_last_layer = True
-#                 if layer == self._nHLayers:
+#                 if layer == self.nHLayers:
 #                     break
 
                 dae_layer = DAE_Layer(in_data=x, prev_layer_size=self._net_shape[layer],
@@ -93,9 +93,9 @@ class Stacked_DAE(object):
     
     @property
     def get_weights(self):
-#         if len(self.weights) != self._nHLayers + 1:
+#         if len(self.weights) != self.nHLayers + 1:
         self.weights = []
-        for n in xrange(self._nHLayers + 1):
+        for n in xrange(self.nHLayers + 1):
             if self.get_layers[n].get_w:
                 try:
                     self.weights.append(self._sess.run(self.get_layers[n].get_w))
@@ -108,9 +108,9 @@ class Stacked_DAE(object):
 
     @property
     def get_biases(self):
-#         if len(self.biases) != self._nHLayers + 1:
+#         if len(self.biases) != self.nHLayers + 1:
         self.biases = []
-        for n in xrange(self._nHLayers + 1):
+        for n in xrange(self.nHLayers + 1):
             if self.get_layers[n].get_b:
                 try:
                     self.biases.append(self._sess.run(self.get_layers[n].get_b))
@@ -167,7 +167,7 @@ class Stacked_DAE(object):
 #     def finetune_net(self):
 #         last_output = self._x
 #         
-#         for layer in xrange(self._nHLayers + 1):
+#         for layer in xrange(self.nHLayers + 1):
 #             w = self.get_layers[layer]
     
     def genrate_next_dataset(self, from_dataset, layer):
