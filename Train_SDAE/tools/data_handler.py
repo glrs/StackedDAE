@@ -9,7 +9,7 @@ from os.path import join as pjoin
 from config import FLAGS
 
 # TODO: Use Dictionary instead!
-TPM = {'filtered':'TPM_filtered_data.csv', 'original':'GSE71585_RefSeq_TPM.csv', 'zipped':'GSE71585_RefSeq_TPM.csv.gz'}
+# TPM = {'filtered':'TPM_filtered_data.csv', 'original':'GSE71585_RefSeq_TPM.csv', 'zipped':'GSE71585_RefSeq_TPM.csv.gz'}
 TPM = ['TPM_ready_data.csv', 'GSE71585_RefSeq_TPM.csv', 'GSE71585_RefSeq_TPM.csv.gz']
 RPKM = ['RPKM_ready_data.csv', 'GSE71585_RefSeq_RPKM.csv', 'GSE71585_RefSeq_RPKM.csv.gz']
 COUNTS = ['Counts_ready_data.csv', 'GSE71585_RefSeq_counts.csv', 'GSE71585_RefSeq_counts.csv.gz']
@@ -77,7 +77,7 @@ def label_metadata(label_matrix, label_col):
     mapped_labels = label_matrix.replace(label_map[[0]].values.tolist(), label_map[[1]].values.tolist())
 #     print("label_matrix", label_matrix)
 #     print("mapped_labels", mapped_labels)
-    
+
     # Return the mapped labels as list and the label map (unique classes and number can be obtained from map)
     return np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],)), np.asarray(label_map) #, unique_classes, num_classes
 
@@ -102,12 +102,22 @@ def load_linarsson(transpose=False):
     labels.set_index(labels.columns.values[0], inplace=True)
     
     if transpose:
-        return np.array(data.transpose()), labels ,label_metadata(label_matrix=labels, label_col='level1class')
+        data = data.transpose()
+
+    return np.array(data), labels ,label_metadata(label_matrix=labels, label_col='level1class')
+
+def load_data(dataset=None, d_type=None, label_col=None, transpose=None):
+    if dataset == 'Linarsson':
+        return load_linarsson(transpose=transpose)
+    elif dataset == 'Allen':
+        return load_allen(d_type=d_type, label_col=label_col, transpose=transpose)
     else:
-        return np.array(data), labels ,label_metadata(label_matrix=labels, label_col='level1class')
+        exit("Usage: load_data(dataset=['Linarsson', 'Allen'],\
+            {only for Allen}data_type=['TPM', 'RPKM', 'Counts', 'Labels', None],\
+            {only for Allen}label_col=[int], (optional)transpose=[Boolean (default=None)])")
 
-
-def load_data(d_type=None, label_col=None, transpose=False):
+# def load_data(d_type=None, label_col=None, transpose=False):
+def load_allen(d_type=None, label_col=None, transpose=False):
     if d_type == 'TPM':
         data = TPM
         print("TPM file is loading...")
@@ -122,7 +132,7 @@ def load_data(d_type=None, label_col=None, transpose=False):
         print("Label file is loading...")
     else:
         exit("Usage: load_data(data_type=['TPM', 'RPKM', 'Counts', 'Labels', None],\
-            label_col=[int], (optional)transpose=[Boolean])")
+            label_col=[int], (optional)transpose=[Boolean (default=None)])")
             
     if not os.path.exists(pjoin(FLAGS.data_dir, data[0])):
         if not os.path.exists(pjoin(FLAGS.data_dir, data[1])):
@@ -151,13 +161,18 @@ def load_data(d_type=None, label_col=None, transpose=False):
     # Use recursion to load and return the labels as well
     if d_type == 'Labels' or d_type is None:
         # Return Label Metadata
-#         print()
-        return label_metadata(label_matrix=d, label_col=label_col)
+
+        labels = d[[label_col]]
+#         print(labels)
+        return labels, label_metadata(label_matrix=d, label_col=label_col)
     else:
         if transpose:
-            return np.array(d.transpose()), load_data(label_col=label_col)
-        else:
-            return np.array(d), load_data(label_col=label_col)
+            d = d.transpose()
+
+        labels, (mapped_labels, label_map) = load_allen(label_col=label_col)
+        
+    return np.array(d), labels, (mapped_labels, label_map)
+
 
 
         
