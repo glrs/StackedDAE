@@ -39,20 +39,6 @@ type.act.per.node <- function(act, m, filename){
     par(mfrow=c(1,1))
 }
 
-# args <- commandArgs(trailingOnly = TRUE)
-# numLayers <- (length(args) - 2)/2
-# print(paste("Number of layers:", numLayers))
-
-# Read expression data. (Currently used only to get gene names.)
-# print("Reading expression data...")
-# exp_data <- read.delim(args[1],check.names=FALSE,row.names=1)
-# Read metadata (clustering results)
-# print("Reading metadata...")
-# meta <- read.delim(args[2],check.names=FALSE)
-# Check for same ordering
-#stopifnot(identical(colnames(exp_data), rownames(meta)))
-# stopifnot(identical(as.character(meta$cell_id), colnames(exp_data)))
-
 # Propagate activity through the network
 # Activation of visible layer is the actual expression data
 # act <- t(exp_data)
@@ -65,7 +51,7 @@ type.act.per.node <- function(act, m, filename){
 #   act <- get_activations(t(act), w, b)
 # }
 
-# Define colors and such for the metadata
+# # Define colors and such for the metadata
 def_colors <- function(meta){
     # Make the 1st column index column (rownames in R), and remove it 
     rownames(meta) <- meta[, colnames(meta)[1]] 
@@ -81,10 +67,7 @@ def_colors <- function(meta){
     names(coi) <<- rownames(meta)
 }
 
-# outfile_pref <- strsplit(basename(args[1]),"\\.")[[1]][1]
-# print(outfile_pref)
-# 
-
+# # Handle several analysis functions 
 do_analysis <- function(act, outfile_pref){
     col_name <- colnames(act)[1]
     rownames(act) <- act[,col_name]
@@ -105,8 +88,7 @@ plot_pca <- function(act, outfile_pref){
     pcafile <- paste(outfile_pref, "PCA.pdf", sep="_")
 
     p <- prcomp(act)
-    
-#     col <- typeCols[coi[rownames(act)]]
+
     pdf(file=pcafile, paper="a4r")
     par(mfrow=c(1,2))
     plot(p$x, col=colrs, pch=20)
@@ -114,14 +96,13 @@ plot_pca <- function(act, outfile_pref){
     dev.off()
 }
 
-# Rtsne
+# # Rtsne
 plot_tsne <- function(act, outfile_pref){
     tsnefile <- paste(outfile_pref, "tSNE.pdf", sep="_")
     
 #     nondup <- act[which(!duplicated(act)),]
     r <- Rtsne(act, perplexity=10)
-    
-#     col <- typeCols[coi[rownames(nondup)]]
+
     pdf(file=tsnefile, paper="a4")
     plot(r$Y, pch=20, col=colrs)
     dev.off()
@@ -142,8 +123,7 @@ node_profiles <- function(act, outfile_pref){
 # # Or per cell type
 cell_profiles <- function(act, outfile_pref){
     filename <- paste(outfile_pref, "cell_profiles.pdf", sep="_")
-#     png(file=filename, width = 1000, height = 3000)
-#     png(filename)
+
     pdf(filename, paper="a4")
     type.act.per.node(act, coi)
     dev.off()
