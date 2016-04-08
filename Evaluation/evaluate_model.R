@@ -22,7 +22,7 @@ library("Rtsne")
 # }
 
 node.act.per.type <- function(act, node, m){
-    lev <- levels(btype)
+    lev <- levels(coi)
     boxes <- NULL
     for (ctype in lev){
         box <- t(act[which(m==ctype), node])
@@ -33,8 +33,8 @@ node.act.per.type <- function(act, node, m){
 
 type.act.per.node <- function(act, m, filename){
     par(mfrow=c(4,1))
-    for(cell in levels(btype)){
-        boxplot(act[which(btype==cell),],main=cell,las=2,names=paste0("Node",1:ncol(act)))
+    for(cell in levels(coi)){
+        boxplot(act[which(coi==cell),],main=cell,las=2,names=paste0("Node",1:ncol(act)))
     }
     par(mfrow=c(1,1))
 }
@@ -66,12 +66,19 @@ type.act.per.node <- function(act, m, filename){
 # }
 
 # Define colors and such for the metadata
-def_colors <- function(meta){ #, coi){
-    typeNames <- levels(meta$level1class)
-    typeCols <<- rainbow(length(typeNames)) # c("red","blue","black","green","yellow","orange","brown","purple")
-    names(typeCols) <<- typeNames
-    btype <<- meta$level1class
-    names(btype) <<- meta$cell_id #rownames(meta)
+def_colors <- function(meta){
+    # Make the 1st column index column (rownames in R), and remove it 
+    rownames(meta) <- meta[, colnames(meta)[1]] 
+    meta[, colnames(meta)[1]] <- NULL
+    
+    # Now 1st column is the former 2nd column. So we use this to take tha names
+    typeNames <- levels(meta[, colnames(meta)[1]])
+    typeColors <<- rainbow(length(typeNames))
+    names(typeColors) <<- typeNames
+    
+    # Take the column of interest (coi) and assign example names to the labels
+    coi <<- meta[, colnames(meta)[1]]
+    names(coi) <<- rownames(meta)
 }
 
 # outfile_pref <- strsplit(basename(args[1]),"\\.")[[1]][1]
@@ -83,9 +90,11 @@ do_analysis <- function(act, outfile_pref){
     rownames(act) <- act[,col_name]
     act[, col_name] <- NULL
     
-#     def_colors(meta)
-    plot_pca(act, outfile_pref)
-    plot_tsne(act, outfile_pref)
+    nondup <- act[which(!duplicated(act)),]
+    colrs <<- typeColors[coi[rownames(nondup)]]
+    
+    plot_pca(nondup, outfile_pref)
+    plot_tsne(nondup, outfile_pref)
     node_profiles(act, outfile_pref)
     cell_profiles(act, outfile_pref)
     calc_rf(act)
@@ -97,11 +106,11 @@ plot_pca <- function(act, outfile_pref){
 
     p <- prcomp(act)
     
-    col <- typeCols[btype[rownames(act)]]
+#     col <- typeCols[coi[rownames(act)]]
     pdf(file=pcafile, paper="a4r")
     par(mfrow=c(1,2))
-    plot(p$x, col=col, pch=20)
-    plot(p$x[,2:3], col=col,pch=20)
+    plot(p$x, col=colrs, pch=20)
+    plot(p$x[,2:3], col=colrs,pch=20)
     dev.off()
 }
 
@@ -109,12 +118,12 @@ plot_pca <- function(act, outfile_pref){
 plot_tsne <- function(act, outfile_pref){
     tsnefile <- paste(outfile_pref, "tSNE.pdf", sep="_")
     
-    nondup <- act[which(!duplicated(act)),]
-    r <- Rtsne(nondup, perplexity=10)
+#     nondup <- act[which(!duplicated(act)),]
+    r <- Rtsne(act, perplexity=10)
     
-    col <- typeCols[btype[rownames(nondup)]]
+#     col <- typeCols[coi[rownames(nondup)]]
     pdf(file=tsnefile, paper="a4")
-    plot(r$Y, pch=20, col=col)
+    plot(r$Y, pch=20, col=colrs)
     dev.off()
 }
 
@@ -125,7 +134,7 @@ node_profiles <- function(act, outfile_pref){
     pdf(filename, paper="a4")
     par(mfrow=c(2,4))
     for(node in order(apply(act, 2, sd),decreasing=TRUE)){
-        node.act.per.type(act, node, btype)
+        node.act.per.type(act, node, coi)
     }
     dev.off()
 }
@@ -136,12 +145,12 @@ cell_profiles <- function(act, outfile_pref){
 #     png(file=filename, width = 1000, height = 3000)
 #     png(filename)
     pdf(filename, paper="a4")
-    type.act.per.node(act, btype)
+    type.act.per.node(act, coi)
     dev.off()
 }
 
 # # Check predictivity
 calc_rf <- function(act){
-    rf <- randomForest(x=act, y=as.factor(btype), importance=TRUE)
+    rf <- randomForest(x=act, y=as.factor(coi), importance=TRUE)
     print(paste("RF estimated error rate", tail(rf$err.rate, n=1)[,1], sep=":"))
 }
