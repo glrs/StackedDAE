@@ -228,12 +228,12 @@ def pretrain_sdae(input_x, shape):
                 print("\n\n")
                 print "|  Layer   |   Epoch    |   Step   |    Loss    |"
                 
-                for step in xrange(FLAGS.pretraining_epochs):# * input_x.train.num_examples):
+                for step in xrange(FLAGS.pretraining_epochs * input_x.train.num_examples):
                     feed_dict = fill_feed_dict_dae(input_x.train, sdae._x)
     
                     loss, _ = sess.run([cost, train_op], feed_dict=feed_dict)
                     
-                    if step % 100 == 0:
+                    if step % 1000 == 0:
                         summary_str = sess.run(summary_op, feed_dict=feed_dict)
                         summary_writer.add_summary(summary_str, step)
                         
@@ -293,7 +293,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         
         sess.run(tf.initialize_all_variables())
         
-        steps = FLAGS.finetuning_epochs# * input_x.train.num_examples
+        steps = FLAGS.finetuning_epochs * input_x.train.num_examples
         for step in xrange(steps):
             start_time = time.time()
             
@@ -304,7 +304,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
             duration = time.time() - start_time
 
             # Write the summaries and print an overview fairly often.
-            if step % 100 == 0:
+            if step % 1000 == 0:
                 # Print status to stdout.
                 print "\nLoss: ", loss_value
 #                 print "Eval corr:", ev_corr
