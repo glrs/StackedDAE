@@ -140,10 +140,10 @@ class Adasyn(object):
         classes.remove(minorityclass)
         
         for i in xrange(len(ymin)):
-             indices = neigh.kneighbors(Xmin[i].reshape(1,-1), K, False)
-    
-             #print ">", len(all_indices_multi(classes, np.array(y)[indices].tolist()[0]))
-             rlist[i] = float(len(all_indices_multi(classes, np.array(y)[indices].tolist()[0]))) / K
+            indices = neigh.kneighbors(Xmin[i].reshape(1,-1), K, False)
+            
+            #print ">", len(all_indices_multi(classes, np.array(y)[indices].tolist()[0]))
+            rlist[i] = float(len(all_indices_multi(classes, np.array(y)[indices].tolist()[0]))) / K
     
             
         normConst = sum(rlist)
