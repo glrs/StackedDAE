@@ -53,28 +53,29 @@ type.act.per.node <- function(act, m, filename){
 
 # # Define colors and such for the metadata
 def_colors <- function(meta){
-    # Make the 1st column index column (rownames in R), and remove it 
-    rownames(meta) <- meta[, colnames(meta)[1]] 
-    meta[, colnames(meta)[1]] <- NULL
-    
+#     print(meta)
     # Now 1st column is the former 2nd column. So we use this to take tha names
     typeNames <- levels(meta[, colnames(meta)[1]])
+#     print(typeNames)
     typeColors <<- rainbow(length(typeNames))
+#     print(typeColors)
     names(typeColors) <<- typeNames
+#     print(typeColors)
     
     # Take the column of interest (coi) and assign example names to the labels
     coi <<- meta[, colnames(meta)[1]]
-    names(coi) <<- rownames(meta)
+#     print(coi)
+    names(coi) <<- 1:nrow(meta)
+#     print(coi)
 }
 
 # # Handle several analysis functions 
 do_analysis <- function(act, outfile_pref){
-    col_name <- colnames(act)[1]
-    rownames(act) <- act[,col_name]
-    act[, col_name] <- NULL
-    
+#     print(act)
     nondup <- act[which(!duplicated(act)),]
-    colrs <<- typeColors[coi[rownames(nondup)]]
+#     print(nondup)
+    colrs <<- typeColors[coi[1:nrow(nondup)]]
+#     print(colrs)
     
     plot_pca(nondup, outfile_pref)
     plot_tsne(nondup, outfile_pref)
