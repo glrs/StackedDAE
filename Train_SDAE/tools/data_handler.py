@@ -78,8 +78,10 @@ def label_metadata(label_matrix, label_col):
 #     print("label_matrix", label_matrix)
 #     print("mapped_labels", mapped_labels)
 
-    # Return the mapped labels as list and the label map (unique classes and number can be obtained from map)
-    return np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],)), np.asarray(label_map) #, unique_classes, num_classes
+    # Return the mapped labels as ndarray and the label map (unique classes and number can be obtained from map)
+    # np.reshape(mapped_labels[[label_col]].values, (mapped_labels.shape[0],))
+    # Return the mapped labels as DataFrame and the label map (unique classes and number can be obtained from map)
+    return mapped_labels[[label_col]], np.asarray(label_map) #, unique_classes, num_classes
 
 
 def sort_labels(data_in):
