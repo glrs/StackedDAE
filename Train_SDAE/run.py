@@ -85,14 +85,19 @@ def main():
         have a predefined configuration or create it on the fly by analyzing information
         from the input data.
     """
-    
+
+    if FLAGS.use_balanced:
+        transp = True
+    else:
+        transp = False
+
     # Open DataFile
 
     start_time = time.time()
 #     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
 #     labelfile = load_data('Labels')
-    datafile, labels, (mapped_labels_df, label_map) = load_data('Linarsson', transpose=True)
-#     datafile, labels, (mapped_labels_df, label_map) = load_data(dataset='Allen', d_type='TPM', label_col=7, transpose=True)
+    datafile_orig, labels, (mapped_labels_df, label_map) = load_data('Linarsson', transpose=transp)
+#     datafile, labels, (mapped_labels_df, label_map) = load_data(dataset='Allen', d_type='TPM', label_col=7, transpose=transp)
 
     mapped_labels = np.reshape(mapped_labels_df.values, (mapped_labels_df.shape[0],))
 #     print(label_map)
@@ -100,17 +105,19 @@ def main():
     print("Data Loaded. Duration:", time.time() - start_time)
     np.set_printoptions(threshold=np.nan)
 
-    a = Adasyn(datafile, mapped_labels, label_map[:,1], beta=1)
-    datafile, mapped_labels = a.balance_all()
-#     a.save_data(pjoin(FLAGS.data_dir, 'TPM_balanced_data.csv'), pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
-    del(a)
+    if transp:
+        a = Adasyn(datafile_orig, mapped_labels, label_map[:,1], beta=1)
+        datafile, mapped_labels = a.balance_all()
+    #     a.save_data(pjoin(FLAGS.data_dir, 'TPM_balanced_data.csv'), pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
+        del(a)
 
     recr_labels = pd.DataFrame(data=mapped_labels).replace(label_map[:,1].tolist(), label_map[:,0].tolist())
 #     print(recr_labels)
 
     # Data Normalization
     start_time = time.time()
-    datafile_norm = normalize_data(datafile, transpose=True)
+    datafile_norm = normalize_data(datafile, transpose=transp)
+    datafile_orig = normalize_data(datafile_orig, transpose=transp)
 
     print("Data Normalized. Duration:", time.time() - start_time)
 
@@ -146,7 +153,7 @@ def main():
 
     # Create explanatory plots/graphs
     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Pretraining')
-    analyze(sdae, datafile_norm, labels, mapped_labels, prefix='Pretraining')
+    analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Pretraining')
         
 #         pcafile = r.paste("Layer_{}".format(layer.which), "PCA.pdf", sep="_")
 #         grdevices.pdf(pjoin(FLAGS.output_dir, pcafile))
@@ -173,7 +180,7 @@ def main():
 
     # Create explanatory plots/graphs
     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
-    analyze(sdae, datafile_norm, labels, mapped_labels, prefix='Finetuning')
+    analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Finetuning')
 
     print("\nConfiguration:")
     print("\n{: >45}\t".format("# Hidden Layers:"), nHLay)
