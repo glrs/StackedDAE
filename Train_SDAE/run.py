@@ -96,7 +96,7 @@ def main():
     start_time = time.time()
 #     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
 #     labelfile = load_data('Labels')
-    datafile_orig, labels, (mapped_labels_df, label_map) = load_data('Linarsson', transpose=transp)
+    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, transpose=transp)
 #     datafile, labels, (mapped_labels_df, label_map) = load_data(dataset='Allen', d_type='TPM', label_col=7, transpose=transp)
 
     mapped_labels = np.reshape(mapped_labels_df.values, (mapped_labels_df.shape[0],))
@@ -152,9 +152,9 @@ def main():
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
     # Create explanatory plots/graphs
-    analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Pretraining')
+#     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Pretraining')
     analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Pretraining')
-        
+
 #         pcafile = r.paste("Layer_{}".format(layer.which), "PCA.pdf", sep="_")
 #         grdevices.pdf(pjoin(FLAGS.output_dir, pcafile))
 #         r.par(mfrow=r.c(1,2))
@@ -162,7 +162,7 @@ def main():
 #         # btype : broad_type
 #         col = typeCols[btype[r.rownames(datafile)]]
 #         r.plot(p.rx2('x'), col=col, pch=20)
-#         r.plot(p.rx2('x')[:][2:3],col=col, pch=20)  
+#         r.plot(p.rx2('x')[:][2:3],col=col, pch=20)
 #         grdevices.dev_off()
 
 
@@ -170,7 +170,7 @@ def main():
     data = load_data_sets(datafile_norm, mapped_labels)
     print("\nTotal Number of Examples:", data.train.num_examples + data.test.num_examples)
 
-    # Run finetuning step    
+    # Run finetuning step
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0])
 
 #     print("Random Forests After Finetuning for Autoencoder layers:")
@@ -179,7 +179,7 @@ def main():
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
     # Create explanatory plots/graphs
-    analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
+#     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
     analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Finetuning')
 
     print("\nConfiguration:")
@@ -225,8 +225,10 @@ def analyze(sdae, datafile_norm, labels, mapped_labels, prefix):
 #                 for node in weights.transpose():
 #                     sns.distplot(node, kde=False, fit=stats.gamma, rug=True);
 #                     sns.plt.show()
-                    
-            plot_tSNE(act, mapped_labels, plot_name="Pyhton_{}_tSNE_layer_{}".format(prefix, layer.which))
+            try:
+                plot_tSNE(act, mapped_labels, plot_name="Pyhton_{}_tSNE_layer_{}".format(prefix, layer.which))
+            except IndexError as e:
+                pass
         except FailedPreconditionError as e:
             break
 
