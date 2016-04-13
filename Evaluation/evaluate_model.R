@@ -1,25 +1,25 @@
 suppressPackageStartupMessages(library("randomForest"))
 library("Rtsne")
 
-# ## Function definitions
-# 
-# sgm <- function(x){
-#   # Sigmoid function
-#     return(1/(1+exp(-x)))
-# }
-# 
-# get_activations <- function(exp_data, w, b){
-#   # Propagate inputs through to the hidden layer
-#   # Linear transform
-#   lin <- t(w) %*% as.matrix(exp_data)
-#   # Add bias (a bit ugly)
-#   bia <- lin
-#   for(i in 1:nrow(lin)){
-#     bia[i,] <- lin[i,] + b[i,] 
-#   }
-#   act <- t(sgm(bia))
-#   return(act)
-# }
+## Function definitions
+
+sgm <- function(x){
+    # Sigmoid function
+    return(1/(1+exp(-x)))
+}
+
+get_activations <- function(exp_data, w, b){
+    # Propagate inputs through to the hidden layer
+    # Linear transform
+    lin <- t(w) %*% as.matrix(exp_data)
+    # Add bias (a bit ugly)
+    bia <- lin
+    for(i in 1:nrow(lin)){
+        bia[i,] <- lin[i,] + b[i,] 
+    }
+    act <- t(sgm(bia))
+    return(act)
+}
 
 node.act.per.type <- function(act, node, m){
     lev <- levels(coi)
@@ -70,12 +70,15 @@ def_colors <- function(meta){
 }
 
 # # Handle several analysis functions 
-do_analysis <- function(act, outfile_pref){
+do_analysis <- function(data, w, b, outfile_pref){
+#     act <- get_activations(data, w, b)
 #     print(act)
     nondup <- act[which(!duplicated(act)),]
 #     print(nondup)
     colrs <<- typeColors[coi[1:nrow(nondup)]]
 #     print(colrs)
+
+
     
     plot_pca(nondup, outfile_pref)
     plot_tsne(nondup, outfile_pref)
