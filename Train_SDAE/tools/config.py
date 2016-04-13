@@ -23,7 +23,8 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # Data Management
-flags.DEFINE_boolean('use_balanced', False, 'Use balanced data or not. If not existed they will be created.')
+flags.DEFINE_string('dataset', 'Allen', 'Choose which dataset you want to use')
+flags.DEFINE_boolean('use_balanced', True, 'Use balanced data or not. If not existed they will be created.')
 
 # Autoencoder Architecture Specific Flags
 flags.DEFINE_integer('num_hidden_layers', 3, 'Number of hidden layers')
