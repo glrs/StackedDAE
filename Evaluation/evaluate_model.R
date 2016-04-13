@@ -15,7 +15,7 @@ get_activations <- function(exp_data, w, b){
     # Add bias (a bit ugly)
     bia <- lin
     for(i in 1:nrow(lin)){
-        bia[i,] <- lin[i,] + b[i,] 
+        bia[i,] <- lin[i,] + b[[i]]
     }
     act <- t(sgm(bia))
     return(act)
@@ -70,21 +70,22 @@ def_colors <- function(meta){
 }
 
 # # Handle several analysis functions 
-do_analysis <- function(data, w, b, outfile_pref){
-#     act <- get_activations(data, w, b)
-#     print(act)
-    nondup <- act[which(!duplicated(act)),]
-#     print(nondup)
-    colrs <<- typeColors[coi[1:nrow(nondup)]]
-#     print(colrs)
+do_analysis <- function(act, w, b, outfile_pref){
+    for(i in 1:length(w)){
+        act <- get_activations(t(act), w[[i]], b[[i]])
+    #     print(act)
+        nondup <- act[which(!duplicated(act)),]
+    #     print(nondup)
+        colrs <<- typeColors[coi[1:nrow(nondup)]]
+    #     print(colrs)
 
-
-    
-    plot_pca(nondup, outfile_pref)
-    plot_tsne(nondup, outfile_pref)
-    node_profiles(act, outfile_pref)
-    cell_profiles(act, outfile_pref)
-    calc_rf(act)
+        
+        plot_pca(nondup, paste(outfile_pref, i, sep='_'))
+        plot_tsne(nondup, paste(outfile_pref, i, sep='_'))
+        node_profiles(act, paste(outfile_pref, i, sep='_'))
+        cell_profiles(act, paste(outfile_pref, i, sep='_'))
+        calc_rf(act)
+    }
 }
 
 # # PCA on activations

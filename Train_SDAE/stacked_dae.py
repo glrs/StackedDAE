@@ -122,8 +122,8 @@ class Stacked_DAE(object):
         return self.biases
     
     def get_activation(self, x, layer, use_fixed=True):
-#         return self._sess.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
-        return self._sess.run(self.get_layers[layer]._activate(x, self.get_weights[layer], self.get_biases[layer]))
+        return self._sess.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
+#         return self._sess.run(tf.sigmoid(tf.nn.bias_add(tf.matmul(x, self.get_weights[layer]), self.get_biases[layer]), name='activate'))
 
     def train(self, cost, layer=None):
 #         with tf.name_scope("Training"):
