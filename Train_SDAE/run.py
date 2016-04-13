@@ -96,8 +96,8 @@ def main():
     start_time = time.time()
 #     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
 #     labelfile = load_data('Labels')
-    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, transpose=transp)
-#     datafile, labels, (mapped_labels_df, label_map) = load_data(dataset='Allen', d_type='TPM', label_col=7, transpose=transp)
+#     datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, transpose=transp)
+    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, d_type='TPM', label_col=7, transpose=transp)
 
     mapped_labels = np.reshape(mapped_labels_df.values, (mapped_labels_df.shape[0],))
 #     print(label_map)
@@ -152,19 +152,8 @@ def main():
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
     # Create explanatory plots/graphs
-#     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Pretraining')
+    analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Pretraining')
     analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Pretraining')
-
-#         pcafile = r.paste("Layer_{}".format(layer.which), "PCA.pdf", sep="_")
-#         grdevices.pdf(pjoin(FLAGS.output_dir, pcafile))
-#         r.par(mfrow=r.c(1,2))
-#         p = r.prcomp(act)
-#         # btype : broad_type
-#         col = typeCols[btype[r.rownames(datafile)]]
-#         r.plot(p.rx2('x'), col=col, pch=20)
-#         r.plot(p.rx2('x')[:][2:3],col=col, pch=20)
-#         grdevices.dev_off()
-
 
     print("\nLoading train and test data-sets for Finetuning")
     data = load_data_sets(datafile_norm, mapped_labels)
@@ -173,13 +162,13 @@ def main():
     # Run finetuning step
     sdae = SDAE.finetune_sdae(sdae=sdae, input_x=data, n_classes=num_classes, label_map=label_map[:,0])
 
-#     print("Random Forests After Finetuning for Autoencoder layers:")
-#     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
-#     print("Random Forests After Finetuning for all layers:")
-#     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+    print("Random Forests After Finetuning for Autoencoder layers:")
+    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
+    print("Random Forests After Finetuning for all layers:")
+    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
     # Create explanatory plots/graphs
-#     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
+    analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
     analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Finetuning')
 
     print("\nConfiguration:")
@@ -211,15 +200,17 @@ def analyze(sdae, datafile_norm, labels, mapped_labels, prefix):
     def_colors(labels)
     act = np.float32(datafile_norm)
 
+    do_analysis(act, sdae.get_weights, sdae.get_biases, pjoin(FLAGS.output_dir, "{}_R_Layer_".format(prefix)))
+
     for layer in sdae.get_layers:
         fixed = False if layer.which > sdae.nHLayers - 1 else True
-
+ 
         try:
             act = sdae.get_activation(act, layer.which, use_fixed=fixed)
             print("Analysis for layer {}:".format(layer.which + 1))
             temp = pd.DataFrame(data=act)
             do_analysis(temp, pjoin(FLAGS.output_dir, "{}_Layer_{}".format(prefix, layer.which)))
-            
+             
 #             if not fixed:
 #                 weights = sdae.get_weights[layer.which]
 #                 for node in weights.transpose():
