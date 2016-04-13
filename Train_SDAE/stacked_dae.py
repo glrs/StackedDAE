@@ -122,8 +122,8 @@ class Stacked_DAE(object):
         return self.biases
     
     def get_activation(self, x, layer, use_fixed=True):
-#         return self._sess.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
-        return self._sess.run(self.get_layers[layer]._activate(x, self.get_weights[layer], self.get_biases[layer]))
+        return self._sess.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
+#         return self._sess.run(tf.sigmoid(tf.nn.bias_add(tf.matmul(x, self.get_weights[layer]), self.get_biases[layer]), name='activate'))
 
     def train(self, cost, layer=None):
 #         with tf.name_scope("Training"):
@@ -229,7 +229,7 @@ def pretrain_sdae(input_x, shape):
                 print("\n\n")
                 print "|  Layer   |   Epoch    |   Step   |    Loss    |"
                 
-                for step in xrange(FLAGS.pretraining_epochs * input_x.train.num_examples):
+                for step in xrange(FLAGS.pretraining_epochs):# * input_x.train.num_examples):
                     feed_dict = fill_feed_dict_dae(input_x.train, sdae._x)
     
                     loss, _ = sess.run([cost, train_op], feed_dict=feed_dict)
@@ -294,7 +294,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         
         sess.run(tf.initialize_all_variables())
         
-        steps = FLAGS.finetuning_epochs * input_x.train.num_examples
+        steps = FLAGS.finetuning_epochs# * input_x.train.num_examples
         for step in xrange(steps):
             start_time = time.time()
             
