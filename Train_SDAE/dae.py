@@ -101,11 +101,7 @@ class DAE_Layer(object):
         loss = self._loss_x_entropy(x=self._x, z=z, noise=noise_map)
         
         return loss
-        
-#     def __call__(self):
-#         cost = self.get_cost
-#         return cost, self.train(cost=cost)
-        
+
     @property
     def get_w_all_b(self):
         return [self._w, self._b_y, self._b_z]
@@ -122,13 +118,6 @@ class DAE_Layer(object):
     def get_fixed_w(self):
         return self._fixed_w
     
-#     @get_w.setter
-#     def set_w(self, w):
-#         self._w = tf.Variable(tf.zeros(self._shape), trainable=True, name='given_weights')
-#         update = tf.assign(self._w, w, name='external_w')
-# #         self._sess.run(tf.initialize_variables([self._w]))
-#         self._sess.run(update)
-
     @property
     def get_b(self):
         return self._b_y
@@ -136,13 +125,6 @@ class DAE_Layer(object):
     @property
     def get_fixed_b(self):
         return self._fixed_b
-
-#     @get_b_repr.setter
-#     def set_b(self, b):
-#         self._b_y = tf.Variable(tf.zeros([self._next_layer_size]), trainable=True, name='given_biases')
-#         update = tf.assign(self._b_y, b, name='external_b')
-# #         self._sess.run(tf.initialize_variables([self._b_y]))
-#         self._sess.run(update)
 
     @property
     def get_b_recon(self):
