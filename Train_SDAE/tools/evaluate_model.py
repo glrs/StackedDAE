@@ -32,7 +32,7 @@ def run_random_forest(exp_data, labels, weights, biases, n_layers=None):
         
     rf = ensemble.RandomForestClassifier(n_estimators=1000, oob_score=True, max_depth=5)
     rfit = rf.fit(act, labels)
-    print('OOB score: %.2f\n' % rfit.oob_score_)
+    print('OOB score: %.8f\n' % rfit.oob_score_)
 
 
 def plot_tSNE(data, labels, random_state=7074568, plot_name='tsne-generated_{}.png'):

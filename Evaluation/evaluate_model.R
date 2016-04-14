@@ -1,7 +1,7 @@
 suppressPackageStartupMessages(library("randomForest"))
 library("Rtsne")
 
-## Function definitions
+# # Function definitions
 
 sgm <- function(x){
     # Sigmoid function
@@ -32,30 +32,18 @@ node.act.per.type <- function(act, node, m){
 }
 
 type.act.per.node <- function(act, m, filename){
-    par(mfrow=c(4,1))
+    par(mfcol=c(3,1))
     for(cell in levels(coi)){
-        boxplot(act[which(coi==cell),],main=cell,las=2,names=paste0("Node",1:ncol(act)))
+        boxplot(act[which(coi==cell),], main=cell, las=2, names=paste0("Node",1:ncol(act)))
     }
     par(mfrow=c(1,1))
 }
-
-# Propagate activity through the network
-# Activation of visible layer is the actual expression data
-# act <- t(exp_data)
-# for(i in 1:numLayers){
-#   # Read weights and bias for the layer in question
-#   print(paste("Reading weights for layer", i))
-#   w <- read.delim(args[2*i+1],header=FALSE)
-#   print(paste("Reading biases for layer", i))
-#   b <- read.delim(args[2*i+2],header=FALSE)
-#   act <- get_activations(t(act), w, b)
-# }
 
 # # Define colors and such for the metadata
 def_colors <- function(meta){
 #     print(meta)
     # Now 1st column is the former 2nd column. So we use this to take tha names
-    typeNames <- levels(meta[, colnames(meta)[1]])
+    typeNames <<- levels(meta[, colnames(meta)[1]])
 #     print(typeNames)
     typeColors <<- rainbow(length(typeNames))
 #     print(typeColors)
@@ -78,7 +66,6 @@ do_analysis <- function(act, w, b, outfile_pref){
     #     print(nondup)
         colrs <<- typeColors[coi[1:nrow(nondup)]]
     #     print(colrs)
-
         
         plot_pca(nondup, paste(outfile_pref, i, sep='_'))
         plot_tsne(nondup, paste(outfile_pref, i, sep='_'))
@@ -95,9 +82,13 @@ plot_pca <- function(act, outfile_pref){
     p <- prcomp(act)
 
     pdf(file=pcafile, paper="a4r")
-    par(mfrow=c(1,2))
+    # par mar(Bottom, Left, Top, Right)
+    layout(matrix(c(1,2,3,3), ncol=2, byrow=TRUE), heights=c(4, 1))
     plot(p$x, col=colrs, pch=20)
-    plot(p$x[,2:3], col=colrs,pch=20)
+    plot(p$x[,2:3], col=colrs, pch=20)
+    par(mai=c(0,0,0,0))
+    plot.new()
+    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=2, cex=0.8, pt.cex=0.8)
     dev.off()
 }
 
@@ -108,8 +99,12 @@ plot_tsne <- function(act, outfile_pref){
 #     nondup <- act[which(!duplicated(act)),]
     r <- Rtsne(act, perplexity=10)
 
-    pdf(file=tsnefile, paper="a4")
-    plot(r$Y, pch=20, col=colrs)
+    pdf(file=tsnefile, paper="a4r")
+    layout(matrix(c(1,2), ncol=1), heights=c(4, 1))
+    plot(r$Y, pch=20, col=colrs, xlab="", ylab="")
+    par(mai=c(0,0,0,0))
+    plot.new()
+    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=2, cex=0.8, pt.cex=0.8)
     dev.off()
 }
 
@@ -118,7 +113,9 @@ node_profiles <- function(act, outfile_pref){
     filename <- paste(outfile_pref, "node_profiles.pdf", sep="_")
 
     pdf(filename, paper="a4")
-    par(mfrow=c(2,4))
+    layout(matrix(c(1,2,3), nrow=1, ncol=3,byrow=TRUE))
+    par(mar=c(15.0, 2.3, 2.6, 2.1))
+
     for(node in order(apply(act, 2, sd),decreasing=TRUE)){
         node.act.per.type(act, node, coi)
     }
@@ -130,6 +127,7 @@ cell_profiles <- function(act, outfile_pref){
     filename <- paste(outfile_pref, "cell_profiles.pdf", sep="_")
 
     pdf(filename, paper="a4")
+    par(mar=c(4.5, 2.3, 1.7, 0.1))
     type.act.per.node(act, coi)
     dev.off()
 }
