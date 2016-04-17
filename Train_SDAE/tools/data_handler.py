@@ -9,7 +9,8 @@ from os.path import join as pjoin
 from config import FLAGS
 
 # TODO: Use Dictionary instead!
-# TPM = {'filtered':'TPM_filtered_data.csv', 'original':'GSE71585_RefSeq_TPM.csv', 'zipped':'GSE71585_RefSeq_TPM.csv.gz'}
+# TPM = {'filtered':'TPM_common_ready_data.csv', 'ordered':'TPM_ready_data.csv', 'original':'GSE71585_RefSeq_TPM.csv', 'zipped':'GSE71585_RefSeq_TPM.csv.gz'}
+# LABELS = {'filtered':'Labels_filtered.csv', 'ordered':'Labels_inOrder.csv', 'original':'GSE71585_Clustering_Results.csv', 'zipped':'GSE71585_Clustering_Results.csv.gz'}
 TPM = ['TPM_ready_data.csv', 'GSE71585_RefSeq_TPM.csv', 'GSE71585_RefSeq_TPM.csv.gz']
 RPKM = ['RPKM_ready_data.csv', 'GSE71585_RefSeq_RPKM.csv', 'GSE71585_RefSeq_RPKM.csv.gz']
 COUNTS = ['Counts_ready_data.csv', 'GSE71585_RefSeq_counts.csv', 'GSE71585_RefSeq_counts.csv.gz']
@@ -26,11 +27,11 @@ def extract_data(in_f, out_f):
     out_file.close()
 
 
-def order_labels(data_in, label_in, data_out=None, label_out=None):
+def order_labels(data_in, label_in, data_out=None, label_out=None, sep=','):
     print("Ordering Data with Labels...")
     
     labels = pd.read_csv(label_in, index_col=0)
-    data = pd.read_csv(data_in, index_col=0)
+    data = pd.read_csv(data_in, index_col=0, sep=sep)
     
     common_labels = labels.index.intersection(data.columns)
 #     common_labels2 = data.columns.intersection(labels.index)
@@ -89,28 +90,35 @@ def sort_labels(data_in):
     return d.sort_index(0)
 
 
-def load_linarsson(transpose=False):
+def load_linarsson_data(transpose=False):
     print("Counts file is loading...")
-    data = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=[0,1,2,3,4,5,6,8,9,10], header=0, sep='\t', index_col=0)
+#     data = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=[0,1,2,3,4,5,6,8,9,10], header=0, sep='\t', index_col=0)
+    data = pd.read_csv(pjoin(FLAGS.data_dir, 'Linarsson_common_data.txt'), skiprows=[0,1,2,3,4,5,6,8,9,10], header=0, sep='\t', index_col=0)
     data.drop(data.columns[0], axis=1,inplace=True)
     
+    if transpose:
+        data = data.transpose()
+
+    return np.array(data)
+
+def load_linarsson_labels(sub_labels=False):
     print("Label file is loading...")
-    labels = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=7, nrows=2, header=None, sep='\t', index_col=False)
-#     sub_labels = pd.read_csv("expression_mRNA_17-Aug-2014.txt", skiprows=[0,1,2,3,4,5,6,8], nrows=1, sep='\t', index_col=1)
+    rows_to_skip = [0,1,2,3,4,5,6,8] if sub_labels else 7
+    labels = pd.read_csv(pjoin(FLAGS.data_dir, 'expression_mRNA_17-Aug-2014.txt'), skiprows=rows_to_skip, nrows=2, header=None, sep='\t', index_col=False)
+#     sub_labels = pd.read_csv(pjoin(FLAGS.data_dir, "expression_mRNA_17-Aug-2014.txt"), skiprows=[0,1,2,3,4,5,6,8], nrows=1, sep='\t', index_col=1)
 
     labels = labels.transpose()
     labels.columns= labels.iloc[1]
     labels.drop(labels.index[[0, 1]], inplace=True)
     labels.set_index(labels.columns.values[0], inplace=True)
     
-    if transpose:
-        data = data.transpose()
+    return labels, label_metadata(label_matrix=labels, label_col=0)
 
-    return np.array(data), labels ,label_metadata(label_matrix=labels, label_col='level1class')
-
-def load_data(dataset=None, d_type=None, label_col=None, transpose=None):
+def load_data(dataset=None, d_type=None, label_col=None, transpose=None, sub_labels=False):
     if dataset == 'Linarsson':
-        return load_linarsson(transpose=transpose)
+        data = load_linarsson_data(transpose=transpose)
+        labels, meta = load_linarsson_labels(sub_labels)
+        return data, labels, meta
     elif dataset == 'Allen':
         return load_allen(d_type=d_type, label_col=label_col, transpose=transpose)
     else:
@@ -135,7 +143,32 @@ def load_allen(d_type=None, label_col=None, transpose=False):
     else:
         exit("Usage: load_data(data_type=['TPM', 'RPKM', 'Counts', 'Labels', None],\
             label_col=[int], (optional)transpose=[Boolean (default=None)])")
-            
+
+
+#     if not os.path.exists(pjoin(FLAGS.data_dir, data['ordered'])):
+#         if not os.path.exists(pjoin(FLAGS.data_dir, data['original'])):
+#             if not os.path.exists(pjoin(FLAGS.data_dir, data['zipped'])):
+#                 exit("You should download and place the data in the correct folder.")
+#             else:
+#                 extract_data(pjoin(FLAGS.data_dir, data['zipped']), pjoin(FLAGS.data_dir, data['original']))
+#                 if d_type == 'Labels':
+#                     exit("Labels extracted. You need to give a dataset first to receive the labels.")
+#                 else:
+#                     if not os.path.exists(pjoin(FLAGS.data_dir, LABELS['original'])):
+#                         extract_data(pjoin(FLAGS.data_dir, LABELS['zipped']), pjoin(FLAGS.data_dir, LABELS['original']))
+# 
+#                     d, _ = order_labels(pjoin(FLAGS.data_dir, data['original']), pjoin(FLAGS.data_dir, LABELS['original']),
+#                                         pjoin(FLAGS.data_dir, data['ordered']), pjoin(FLAGS.data_dir, LABELS['ordered']))
+#         else:
+#             if d_type == 'Labels':
+#                 exit("You need to give a dataset first to receive the labels.")
+#             else:
+#                 d, _ = order_labels(pjoin(FLAGS.data_dir, data['original']), pjoin(FLAGS.data_dir, LABELS['original']),
+#                                     pjoin(FLAGS.data_dir, data['ordered']), pjoin(FLAGS.data_dir, LABELS['ordered']))
+#     else:
+#         d = pd.read_csv(pjoin(FLAGS.data_dir, data['ordered']), sep='\t', index_col=0)
+
+
     if not os.path.exists(pjoin(FLAGS.data_dir, data[0])):
         if not os.path.exists(pjoin(FLAGS.data_dir, data[1])):
             if not os.path.exists(pjoin(FLAGS.data_dir, data[2])):
@@ -147,7 +180,7 @@ def load_allen(d_type=None, label_col=None, transpose=False):
                 else:
                     if not os.path.exists(pjoin(FLAGS.data_dir, LABELS[1])):
                         extract_data(pjoin(FLAGS.data_dir, LABELS[2]), pjoin(FLAGS.data_dir, LABELS[1]))
-
+ 
                     d, _ = order_labels(pjoin(FLAGS.data_dir, data[1]), pjoin(FLAGS.data_dir, LABELS[1]),
                                         pjoin(FLAGS.data_dir, data[0]), pjoin(FLAGS.data_dir, LABELS[0]))
         else:
@@ -176,5 +209,18 @@ def load_allen(d_type=None, label_col=None, transpose=False):
     return np.array(d), labels, (mapped_labels, label_map)
 
 
+def load_extra(dataset=None, filename=None, transpose=False, label_col=None):
+    if dataset == 'Allen':
+#         data, labels = order_labels(pjoin(FLAGS.data_dir, filename), pjoin(FLAGS.data_dir, LABELS[1]), sep='\t')
+
+        labels = pd.read_csv(pjoin(FLAGS.data_dir, LABELS[0]), sep='\t', index_col=0)
+        data = pd.read_csv(pjoin(FLAGS.data_dir, filename), sep='\t', index_col=0)
+
+        if transpose:
+            data = data.transpose()
+        return np.array(data), labels[[label_col]]
+    elif dataset == 'Linarsson':
+        pass
+        
 
         

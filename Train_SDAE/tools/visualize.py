@@ -8,14 +8,16 @@ from config import FLAGS
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 from scipy import interp
 
-methods = [None, 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
-           'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
-           'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos']
-
+'''
+interpolation options:
+    [None, 'none', 'nearest', 'bilinear', 'bicubic', 'spline16',
+    'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric',
+    'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos']
+'''
 
 def scatter(x, y, plot_name):
     """ Used to plot t-SNE projections """
-
+ 
     num_colors = len(np.unique(y))
     # We choose a color palette with seaborn.
     palette = np.array(sns.color_palette("hls", num_colors))
@@ -40,15 +42,16 @@ def scatter(x, y, plot_name):
             PathEffects.Stroke(linewidth=5, foreground="w"),
             PathEffects.Normal()])
         txts.append(txt)
-    
+     
     plt.savefig(plot_name, dpi=120)
     plt.close()
 
 
-def plot_confusion_matrix(cm, target_names, title='Confusion matrix', cmap=plt.cm.Blues):
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+def plot_confusion_matrix(cm, target_names, title='Confusion matrix', cmap=plt.cm.BuGn):
+    imgplot = plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.grid(False)
+    plt.colorbar(imgplot)
     plt.title(title)
-    plt.colorbar()
     tick_marks = np.arange(len(target_names))
     plt.xticks(tick_marks, target_names, rotation=90)
     plt.yticks(tick_marks, target_names)
@@ -141,7 +144,10 @@ def hist_comparison(data1, data2):
 def make_heatmap(data, name):
     f = plt.figure()
     ax1 = f.add_axes([0.1,0.1,0.8,0.8])
-    ax1.imshow(data, interpolation="none")
+    ax1.grid(False)
+    imgplot = ax1.imshow(data, interpolation="none")
+    imgplot.set_cmap('seismic')
+    f.colorbar(imgplot)
     f.savefig(pjoin(FLAGS.output_dir, name + '.png'))
     plt.close()
 
@@ -163,7 +169,7 @@ def make_2d_hist(data, name):
 #     f.savefig(pjoin(FLAGS.output_dir, name + '.png'))
 
 def heatmap_comparison(data1, label1, data2, label2, data3, label3):    
-    interpolation = methods[1]
+    interpolation = 'none'
     
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True) 
     fig.suptitle('Heatmap Comparison of Normal and Noisy Data')

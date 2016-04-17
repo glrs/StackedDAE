@@ -11,7 +11,7 @@ import pandas as pd
 
 from tools.config import FLAGS, home_out
 from tools.start_tensorboard import start
-from tools.data_handler import load_data, load_linarsson
+from tools.data_handler import load_data, load_linarsson_labels, load_extra
 
 from tools.utils import load_data_sets_pretraining, load_data_sets
 from tools.utils import normalize_data, label_metadata, write_csv
@@ -27,6 +27,7 @@ from tensorflow.python.framework.errors import FailedPreconditionError
 
 from scipy import stats, integrate
 import seaborn as sns
+from rpy2.rinterface._rinterface import RRuntimeError
 sns.set(color_codes=True)
 
 pandas2ri.activate()
@@ -96,8 +97,8 @@ def main():
     start_time = time.time()
 #     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
 #     labelfile = load_data('Labels')
-#     datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, transpose=transp)
-    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, d_type='TPM', label_col=7, transpose=transp)
+    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, transpose=transp)
+#     datafile, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, d_type='TPM', label_col=7, transpose=transp)
 
     mapped_labels = np.reshape(mapped_labels_df.values, (mapped_labels_df.shape[0],))
 #     print(label_map)
@@ -148,12 +149,16 @@ def main():
     sdae = SDAE.pretrain_sdae(input_x=data, shape=sdae_shape)
     del(data)
 
-#     print("Random Forest Before Finetuning")
-#     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+    print("Random Forest Before Finetuning")
+    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
+#     sub_labels, _ = load_linarsson_labels(sub_labels=True)
+    data_an, labels_an = load_extra('Allen', 'TPM_common_ready_data.csv', transpose=True, label_col=7)
     # Create explanatory plots/graphs
-    analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Pretraining')
-    analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Pretraining')
+    analyze(sdae, data_an, labels_an, prefix='Foreign_Pretraining')
+#     analyze(sdae, datafile_norm, recr_labels, prefix='recr_Pretraining')
+#     analyze(sdae, datafile_norm, sub_labels, mapped_labels, prefix='recr_Pretraining')
+    analyze(sdae, datafile_orig, labels, prefix='Pretraining')
 
     print("\nLoading train and test data-sets for Finetuning")
     data = load_data_sets(datafile_norm, mapped_labels)
@@ -168,7 +173,8 @@ def main():
     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
     # Create explanatory plots/graphs
-    analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
+#     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
+    analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Foreign_Finetuning')
     analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Finetuning')
 
     print("\nConfiguration:")
@@ -192,7 +198,7 @@ def main():
 #     Loss Function (X-Entropy, sum of sq. error)
 
 
-def analyze(sdae, datafile_norm, labels, mapped_labels, prefix):
+def analyze(sdae, datafile_norm, labels, mapped_labels=None, prefix=None):
     def_colors = robjects.globalenv['def_colors']
     do_analysis = robjects.globalenv['do_analysis']
 
@@ -200,28 +206,31 @@ def analyze(sdae, datafile_norm, labels, mapped_labels, prefix):
     def_colors(labels)
     act = np.float32(datafile_norm)
 
-    do_analysis(act, sdae.get_weights, sdae.get_biases, pjoin(FLAGS.output_dir, "{}_R_Layer_".format(prefix)))
+    try:
+        do_analysis(act, sdae.get_weights, sdae.get_biases, pjoin(FLAGS.output_dir, "{}_R_Layer_".format(prefix)))
+    except RRuntimeError as e:
+        pass
 
-    for layer in sdae.get_layers:
-        fixed = False if layer.which > sdae.nHLayers - 1 else True
- 
-        try:
-            act = sdae.get_activation(act, layer.which, use_fixed=fixed)
-            print("Analysis for layer {}:".format(layer.which + 1))
-            temp = pd.DataFrame(data=act)
-            do_analysis(temp, pjoin(FLAGS.output_dir, "{}_Layer_{}".format(prefix, layer.which)))
-             
-#             if not fixed:
-#                 weights = sdae.get_weights[layer.which]
-#                 for node in weights.transpose():
-#                     sns.distplot(node, kde=False, fit=stats.gamma, rug=True);
-#                     sns.plt.show()
-            try:
-                plot_tSNE(act, mapped_labels, plot_name="Pyhton_{}_tSNE_layer_{}".format(prefix, layer.which))
-            except IndexError as e:
-                pass
-        except FailedPreconditionError as e:
-            break
+#     for layer in sdae.get_layers:
+#         fixed = False if layer.which > sdae.nHLayers - 1 else True
+#  
+#         try:
+#             act = sdae.get_activation(act, layer.which, use_fixed=fixed)
+#             print("Analysis for layer {}:".format(layer.which + 1))
+#             temp = pd.DataFrame(data=act)
+#             do_analysis(temp, pjoin(FLAGS.output_dir, "{}_Layer_{}".format(prefix, layer.which)))
+#              
+# #             if not fixed:
+# #                 weights = sdae.get_weights[layer.which]
+# #                 for node in weights.transpose():
+# #                     sns.distplot(node, kde=False, fit=stats.gamma, rug=True);
+# #                     sns.plt.show()
+#             try:
+#                 plot_tSNE(act, mapped_labels, plot_name="Pyhton_{}_tSNE_layer_{}".format(prefix, layer.which))
+#             except IndexError as e:
+#                 pass
+#         except FailedPreconditionError as e:
+#             break
 
 if __name__ == '__main__':
     total_time = time.time()
