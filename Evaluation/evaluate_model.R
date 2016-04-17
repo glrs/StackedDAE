@@ -28,13 +28,13 @@ node.act.per.type <- function(act, node, m){
         box <- t(act[which(m==ctype), node])
         boxes[[ctype]] <- box
     }
-    boxplot(boxes, las=2, main=paste("Node", node))
+    boxplot(boxes, las=2, main=paste("Node", node), ylim=c(0,1))
 }
 
 type.act.per.node <- function(act, m, filename){
     par(mfcol=c(3,1))
     for(cell in levels(coi)){
-        boxplot(act[which(coi==cell),], main=cell, las=2, names=paste0("Node",1:ncol(act)))
+        boxplot(act[which(coi==cell),], main=cell, las=2, names=paste0("Node",1:ncol(act)), ylim=c(0,1))
     }
     par(mfrow=c(1,1))
 }
@@ -88,7 +88,7 @@ plot_pca <- function(act, outfile_pref){
     plot(p$x[,2:3], col=colrs, pch=20)
     par(mai=c(0,0,0,0))
     plot.new()
-    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=2, cex=0.8, pt.cex=0.8)
+    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=as.integer((length(typeColors)/10)+0.5), cex=0.8, pt.cex=0.8)
     dev.off()
 }
 
@@ -104,7 +104,7 @@ plot_tsne <- function(act, outfile_pref){
     plot(r$Y, pch=20, col=colrs, xlab="", ylab="")
     par(mai=c(0,0,0,0))
     plot.new()
-    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=2, cex=0.8, pt.cex=0.8)
+    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=as.integer((length(typeColors)/10)+0.5), cex=0.7, pt.cex=0.7)
     dev.off()
 }
 
