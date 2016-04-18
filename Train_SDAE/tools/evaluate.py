@@ -44,6 +44,37 @@ def evaluation(logits, labels):
     # Return the number of true entries. Cast because originally is bool.
     return tf.reduce_sum(tf.cast(correct, tf.int32)), correct, y_p
 
+def predict(sdae, data_set):
+    with sdae.session.graph.as_default():
+        labels_placeholder = tf.placeholder(tf.int32, shape=1,\
+                                            name='labels_placeholder')
+        examples_placeholder = tf.placeholder(tf.float32,\
+                                              shape=(1, sdae._net_shape[0]),\
+                                              name='input_pl')
+        
+        logits = tf.identity(examples_placeholder)
+        
+        for layer in sdae.get_layers:
+            logits = layer.clean_activation(x_in=logits, use_fixed=False)
+            
+        predictions = tf.argmax(logits, 1)
+        
+        labels = tf.identity(labels_placeholder)
+        
+        y_pred = []
+        y_true = []
+        
+        for _ in xrange(data_set.num_examples):
+            feed_dict = fill_feed_dict(data_set,
+                                       examples_placeholder,
+                                       labels_placeholder, 1)
+    
+            y_prediction, y_trues = sdae.sess.run([predictions, labels], feed_dict=feed_dict)
+            y_pred += list(y_prediction)
+            y_true += list(y_trues)
+            
+#         print(y_pred)
+        return y_pred
 
 def do_eval(sess,
             eval_correct,
@@ -75,7 +106,8 @@ def do_eval(sess,
         feed_dict = fill_feed_dict(data_set,
                                    examples_placeholder,
                                    labels_placeholder)
-        corrects, y_prediction, y_trues = sess.run([eval_correct, predictions, labels], feed_dict=feed_dict)
+        corrects, y_prediction, y_trues = sess.run([eval_correct, predictions,\
+                                                    labels], feed_dict=feed_dict)
         true_count += corrects
         y_pred += list(y_prediction)
         y_true += list(y_trues)
