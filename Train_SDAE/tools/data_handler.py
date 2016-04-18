@@ -10,10 +10,11 @@ from config import FLAGS
 
 # TODO: Use Dictionary instead!
 TPM = {'filtered':'TPM_common_ready_data.csv', 'ordered':'TPM_ready_data.csv', 'original':'GSE71585_RefSeq_TPM.csv', 'zipped':'GSE71585_RefSeq_TPM.csv.gz'}
+RPKM = {'ordered':'RPKM_ready_data.csv', 'original':'GSE71585_RefSeq_RPKM.csv', 'zipped':'GSE71585_RefSeq_RPKM.csv.gz'}
+COUNTS = {'ordered':'Counts_ready_data.csv', 'original':'GSE71585_RefSeq_counts.csv', 'zipped':'GSE71585_RefSeq_counts.csv.gz'}
 LABELS = {'ordered':'Labels_inOrder.csv', 'original':'GSE71585_Clustering_Results.csv', 'zipped':'GSE71585_Clustering_Results.csv.gz'}
+
 # TPM = ['TPM_ready_data.csv', 'GSE71585_RefSeq_TPM.csv', 'GSE71585_RefSeq_TPM.csv.gz']
-RPKM = ['RPKM_ready_data.csv', 'GSE71585_RefSeq_RPKM.csv', 'GSE71585_RefSeq_RPKM.csv.gz']
-COUNTS = ['Counts_ready_data.csv', 'GSE71585_RefSeq_counts.csv', 'GSE71585_RefSeq_counts.csv.gz']
 # LABELS = ['Labels_inOrder.csv', 'GSE71585_Clustering_Results.csv', 'GSE71585_Clustering_Results.csv.gz']
 #'counts_ordered_nonzero_zeroone.tsv', 
 #'metadata_ordered_subset.tsv', 
