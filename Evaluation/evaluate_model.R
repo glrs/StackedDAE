@@ -67,11 +67,13 @@ do_analysis <- function(act, w, b, outfile_pref){
         nondup <- act[which(!duplicated(act)),]
         print(dim(act))
         print(dim(nondup))
-        colrs <<- typeColors[coi[1:nrow(nondup)]]
-    #     print(colrs)
         
-        plot_pca(nondup, paste(outfile_pref, i, sep='_'))
-        plot_tsne(nondup, paste(outfile_pref, i, sep='_'))
+        colrs <- typeColors[coi[1:nrow(act)]]
+        plot_pca(nondup, colrs, paste(outfile_pref, i, sep='_'))
+        
+        colrs <- typeColors[coi[1:nrow(nondup)]]
+        plot_tsne(nondup, colrs, paste(outfile_pref, i, sep='_'))
+
         node_profiles(act, paste(outfile_pref, i, sep='_'))
         cell_profiles(act, paste(outfile_pref, i, sep='_'))
         calc_rf(act)
@@ -79,7 +81,7 @@ do_analysis <- function(act, w, b, outfile_pref){
 }
 
 # # PCA on activations
-plot_pca <- function(act, outfile_pref){
+plot_pca <- function(act, colrs, outfile_pref){
     pcafile <- paste(outfile_pref, "PCA.pdf", sep="_")
 
     p <- prcomp(act)
@@ -96,7 +98,7 @@ plot_pca <- function(act, outfile_pref){
 }
 
 # # Rtsne
-plot_tsne <- function(act, outfile_pref){
+plot_tsne <- function(act, colrs, outfile_pref){
     tsnefile <- paste(outfile_pref, "tSNE.pdf", sep="_")
     
 #     nondup <- act[which(!duplicated(act)),]
