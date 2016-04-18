@@ -233,15 +233,15 @@ def load_extra(dataset=None, filename=None, transpose=True, label_col=None, sub_
     if dataset == 'Allen':
 #         data, labels = order_labels(pjoin(FLAGS.data_dir, filename), pjoin(FLAGS.data_dir, LABELS[1]), sep='\t')
 
-        labels = pd.read_csv(pjoin(FLAGS.data_dir, LABELS[0]), sep='\t', index_col=0)
+        labels = pd.read_csv(pjoin(FLAGS.data_dir, LABELS['ordered']), sep='\t', index_col=0)
         data = pd.read_csv(pjoin(FLAGS.data_dir, filename), sep='\t', index_col=0)
 
         if transpose:
             data = data.transpose()
-        return np.array(data), labels[[label_col]]
+        return np.array(data), labels[[label_col]], label_metadata(label_matrix=labels, label_col=label_col)
     elif dataset == 'Linarsson':
         data = load_linarsson_data('filtered', transpose=transpose)
-        labels, _ = load_linarsson_labels(sub_labels)
-        return data, labels
+        labels, meta = load_linarsson_labels(sub_labels)
+        return data, labels, meta
 
         
