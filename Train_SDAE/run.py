@@ -97,8 +97,10 @@ def main():
     start_time = time.time()
 #     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
 #     labelfile = load_data('Labels')
-    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, transpose=transp)
-#     datafile, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, d_type='TPM', label_col=7, transpose=transp)
+#     datafile, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, label_col=1, transpose=transp)
+
+    # Add functionality to load_data to load the filtered Allen dataset (of Linarsson)
+    datafile_orig, labels, (mapped_labels_df, label_map) = load_data(FLAGS.dataset, d_type='filtered', label_col=7, transpose=transp)
 
     mapped_labels = np.reshape(mapped_labels_df.values, (mapped_labels_df.shape[0],))
 #     print(label_map)
@@ -153,7 +155,8 @@ def main():
     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
 
 #     sub_labels, _ = load_linarsson_labels(sub_labels=True)
-    data_an, labels_an = load_extra('Allen', 'TPM_common_ready_data.csv', transpose=True, label_col=7)
+    data_an, labels_an = load_extra('Linarsson', 'Linarsson_common_data.csv', transpose=True, label_col=None)
+
     # Create explanatory plots/graphs
     analyze(sdae, data_an, labels_an, prefix='Foreign_Pretraining')
 #     analyze(sdae, datafile_norm, recr_labels, prefix='recr_Pretraining')
@@ -174,7 +177,7 @@ def main():
 
     # Create explanatory plots/graphs
 #     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
-    analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Foreign_Finetuning')
+    analyze(sdae, data_an, labels_an, mapped_labels, prefix='Foreign_Finetuning')
     analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Finetuning')
 
     print("\nConfiguration:")
