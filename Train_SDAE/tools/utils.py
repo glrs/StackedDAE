@@ -135,6 +135,8 @@ def load_data_sets(input_data, labels, split_only=True, valid_set=False):
         pass
     data_sets = DataSets()
 
+    print("\nSplitting to Train & Test sets for Finetuning")
+
     if valid_set:
         train_examples, test_examples, train_labels, test_labels = \
                         train_test_split(input_data, labels, test_size=0.2)
@@ -153,7 +155,7 @@ def load_data_sets(input_data, labels, split_only=True, valid_set=False):
     data_sets.test = DataSet(test_examples, test_labels)
     
     if not split_only:
-        data_sets.all = DataSet(input_data)
+        data_sets.all = DataSet(input_data, labels)
     
     return data_sets
 
@@ -179,6 +181,8 @@ def load_data_sets_pretraining(input_data, split_only=True, valid_set=False):
     class DataSets(object):
         pass
     data_sets = DataSets()
+    
+    print("\nSplitting to Train & Test sets for pre-training")
     
     if valid_set:
         train_examples, test_examples = train_test_split(input_data, test_size=0.20)
@@ -211,14 +215,16 @@ def _add_noise(x, ratio, n_type='MN'):
     """
 '''
 
-def fill_feed_dict_dae(data_set, input_pl):
-    input_feed = data_set.next_batch(FLAGS.batch_size)
+def fill_feed_dict_dae(data_set, input_pl, batch_size=None):
+    b_size = FLAGS.batch_size if batch_size is None else batch_size
+
+    input_feed = data_set.next_batch(b_size)
     feed_dict = { input_pl: input_feed }
 
     return feed_dict
 
 
-def fill_feed_dict(data_set, input_pl, labels_pl):#, noise=False):
+def fill_feed_dict(data_set, input_pl, labels_pl, batch_size=None):
     """Fills the feed_dict for training the given step.
     A feed_dict takes the form of:
     feed_dict = {
@@ -234,7 +240,9 @@ def fill_feed_dict(data_set, input_pl, labels_pl):#, noise=False):
     """
     # Create the feed_dict for the placeholders filled with the next
     # `batch size ` examples.
-    examples_feed, labels_feed = data_set.next_batch(FLAGS.batch_size)
+    b_size = FLAGS.batch_size if batch_size is None else batch_size
+    
+    examples_feed, labels_feed = data_set.next_batch(b_size)
 
     feed_dict = {
         input_pl: examples_feed,

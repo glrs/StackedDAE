@@ -16,7 +16,7 @@ def get_activations(exp_data, w, b):
 
 # Order of *args: first all the weights and then all the biases
 def run_random_forest(exp_data, labels, weights, biases, n_layers=None):
-#     print len(exp_data), len(labels)
+    print("Calculating Random Forests...")
     assert len(exp_data) == len(labels)
     
     # I think they should be already transposed when running the code. Will see
