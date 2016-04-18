@@ -11,6 +11,8 @@ sgm <- function(x){
 get_activations <- function(exp_data, w, b){
     # Propagate inputs through to the hidden layer
     # Linear transform
+    print(dim(w))
+    print(dim(exp_data))
     lin <- t(w) %*% as.matrix(exp_data)
     # Add bias (a bit ugly)
     bia <- lin
@@ -63,7 +65,8 @@ do_analysis <- function(act, w, b, outfile_pref){
         act <- get_activations(t(act), w[[i]], b[[i]])
     #     print(act)
         nondup <- act[which(!duplicated(act)),]
-    #     print(nondup)
+        print(dim(act))
+        print(dim(nondup))
         colrs <<- typeColors[coi[1:nrow(nondup)]]
     #     print(colrs)
         
