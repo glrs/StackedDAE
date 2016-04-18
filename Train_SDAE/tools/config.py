@@ -24,7 +24,7 @@ FLAGS = flags.FLAGS
 
 # Data Management
 flags.DEFINE_string('dataset', 'Allen', 'Choose which dataset you want to use')
-flags.DEFINE_boolean('use_balanced', True, 'Use balanced data or not. If not existed they will be created.')
+flags.DEFINE_boolean('use_balanced', False, 'Use balanced data or not. If not existed they will be created.')
 
 # Autoencoder Architecture Specific Flags
 flags.DEFINE_integer('num_hidden_layers', 3, 'Number of hidden layers')
@@ -48,13 +48,9 @@ flags.DEFINE_string('emphasis_type', 'Double', 'Type of Emphasis for the Cross E
 
 flags.DEFINE_float('default_noise', [0.0, 'MN'], 'Default Noise ratio and type to apply on the data')
 
-# flags.DEFINE_float('noise_1', [0.50, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
-# flags.DEFINE_float('noise_2', [0.50, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
-# flags.DEFINE_float('noise_3', [0.50, 'MN'], 'Noise ratio to apply on the data, and the type of noise')
-
-flags.DEFINE_float('noise_1', [0.20, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
-flags.DEFINE_float('noise_2', [0.20, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
-flags.DEFINE_float('noise_3', [0.20, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
+flags.DEFINE_float('noise_1', [0.10, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
+flags.DEFINE_float('noise_2', [0.10, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
+flags.DEFINE_float('noise_3', [0.10, 'TFDO'], 'Noise ratio to apply on the data, and the type of noise')
 
 """ TODO: ADD a flag for activation function (sigmoid, tanh, etc.) """
 
