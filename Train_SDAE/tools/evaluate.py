@@ -74,7 +74,7 @@ def predict(sdae, data_set):
             y_true += list(y_trues)
             
 #         print(y_pred)
-        return y_pred
+        return y_pred, y_true
 
 def do_eval(sess,
             eval_correct,
