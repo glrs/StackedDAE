@@ -102,7 +102,7 @@ def main():
     # Read/Upload/Process the Data
     start_time = time.time()
 #     datafile, (mapped_labels, label_map) = load_data('TPM', label_col=9, transpose=True)
-    datafile_orig, labels, meta = load_data(FLAGS.dataset, d_type='filtered',\
+    datafile, labels, meta = load_data(FLAGS.dataset, d_type='filtered',\
                                        label_col=1, transpose=transp)
 
 #     datafile_orig, labels, meta = load_data(FLAGS.dataset, d_type='filtered',\
@@ -122,24 +122,33 @@ def main():
 
     
     # Balance classes
+    balanced_data = None
+    recr_labels = None
     if transp:
-        a = Adasyn(datafile_orig, mapped_labels, label_map[:,1], beta=1)
-        datafile, mapped_labels = a.balance_all()
+        a = Adasyn(datafile, mapped_labels, label_map[:,1], beta=1)
+        balanced_data, mapped_labels = a.balance_all()
 #         a.save_data(pjoin(FLAGS.data_dir, 'TPM_balanced_data.csv'),\
 #                     pjoin(FLAGS.data_dir, 'Mapped_Labels_inOrder_balanced.csv'))
 
-    recr_labels = pd.DataFrame(data=mapped_labels).replace(label_map[:,1].tolist(),\
-                                                           label_map[:,0].tolist())
+        recr_labels = pd.DataFrame(data=mapped_labels)
+        recr_labels = recr_labels.replace(label_map[:,1].tolist(),\
+                                          label_map[:,0].tolist())
+
+    data = balanced_data if transp else datafile
 
     # Data Normalization
     start_time = time.time()
-    datafile_norm = normalize_data(datafile, transpose=transp)
-    datafile_orig = normalize_data(datafile_orig, transpose=transp)
+    norm_data = normalize_data(data, transpose=transp)
+    
+    norm_orig = None
+    if transp:
+        norm_orig = normalize_data(datafile, transpose=transp)
+
     print("Data Normalized. Duration:", time.time() - start_time)
 
 
     # Get the number of existed features (e.g. genes) in the data-set 
-    num_features = datafile_norm.shape[1]
+    num_features = norm_data.shape[1]
 
     # Create the shape of the AutoEncoder
     sdae_shape = [num_features] + nHUnits + [num_classes]
@@ -149,7 +158,7 @@ def main():
 ###  ---  Pre-training Phase  ---  ###
 
     # Get data-sets (train, test) for pretraining in a proper way
-    data = load_data_sets_pretraining(datafile_norm, split_only=False)
+    data = load_data_sets_pretraining(norm_data, split_only=False)
 #     print("\nTotal Number of Examples:",\
 #           data.train.num_examples + data.test.num_examples)
 
@@ -160,7 +169,7 @@ def main():
 
     
     # Run Random Forest Before Finetuning
-    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+    run_rf(norm_data, mapped_labels, sdae.get_weights, sdae.get_biases)
 
 
     # Load another dataset to test it on the created model
@@ -168,12 +177,19 @@ def main():
     data_an, labels_an, meta = load_extra('Allen',\
                                           'TPM_common_ready_data.csv',\
                                           transpose=True, label_col=7)
+    
+    data_an = normalize_data(data_an, transpose=False)
+    data_an = np.transpose(data_an)
+    
     mapped_an_df, l_map = meta
     mapped_an_labs = np.reshape(mapped_an_df.values, (mapped_an_df.shape[0],))
 
     # Create comprehensive plots/graphs
-    analyze(sdae, data_an, labels_an, prefix='Foreign_Pretraining')
-    analyze(sdae, datafile_orig, labels, prefix='Pretraining')
+    try:
+        analyze(sdae, data_an, labels_an, prefix='Foreign_Pretraining')
+        analyze(sdae, norm_orig, labels, prefix='Pretraining')
+    except:
+        pass
 #     analyze(sdae, datafile_norm, recr_labels, prefix='recr_Pretraining')
 #     analyze(sdae, datafile_norm, sub_labels, mapped_labels, prefix='recr_Pretraining')
     
@@ -181,7 +197,7 @@ def main():
 ###  ---  Fine-tuning Phase  ---  ###
 
     # Get data-sets (train, test) for finetuning in a proper way
-    data = load_data_sets(datafile_norm, mapped_labels)
+    data = load_data_sets(norm_data, mapped_labels)
 #     print("\nTotal Number of Examples:",\
 #           data.train.num_examples + data.test.num_examples)
 
@@ -202,15 +218,18 @@ def main():
 
 
     # Run Random Forests After Finetuning for all layers
-    run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases)
+    run_rf(norm_data, mapped_labels, sdae.get_weights, sdae.get_biases)
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
 #     print("Random Forests After Finetuning for all layers:")
 
 
     # Create comprehensive plots/graphs
 #     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
-    analyze(sdae, data_an, labels_an, mapped_labels, prefix='Foreign_Finetuning')
-    analyze(sdae, datafile_orig, labels, mapped_labels, prefix='Finetuning')
+    try:
+        analyze(sdae, data_an, labels_an, mapped_labels, prefix='Foreign_Finetuning')
+        analyze(sdae, norm_orig, labels, mapped_labels, prefix='Finetuning')
+    except:
+        pass
 
     # print the used set up
     print_setup()
@@ -251,10 +270,10 @@ def analyze(sdae, datafile_norm, labels, mapped_labels=None, prefix=None):
 #             break
 
 def print_setup():
+    nHLay = FLAGS.num_hidden_layers
     nHUnits = [getattr(FLAGS, "hidden{0}_units".format(j + 1)) for j in xrange(nHLay)]
     l_rates = [getattr(FLAGS, "pre_layer{}_learning_rate".format(i)) for i in xrange(1,nHLay+1)]
     noise_ratios = [getattr(FLAGS, "noise_{0}".format(i)) for i in xrange(1,nHLay+1)]
-    nHLay = FLAGS.num_hidden_layers
     print("\nConfiguration:")
     print("\n{: >45}\t".format("Dataset:"), FLAGS.dataset)
     print("\n{: >45}\t".format("# Hidden Layers:"), nHLay)
