@@ -74,10 +74,17 @@ class Stacked_DAE(object):
 
                 if not layer < self.nHLayers:
                     is_last_layer = True
+                    new_x = tf.identity(x)
+                else:
+                    # Add bias node (experimental)
+                    bias_node = tf.ones(shape=[FLAGS.batch_size, 1], dtype=tf.float32)
+                    new_x = tf.concat(1, [bias_node, x])
+                    
+                    
 #                 if layer == self.nHLayers:
 #                     break
 
-                dae_layer = DAE_Layer(in_data=x, prev_layer_size=self._net_shape[layer],
+                dae_layer = DAE_Layer(in_data=new_x, prev_layer_size=self._net_shape[layer],
                                       next_layer_size=self._net_shape[layer+1], nth_layer=layer+1,
                                       last_layer=is_last_layer)
                 
@@ -98,7 +105,7 @@ class Stacked_DAE(object):
         for n in xrange(self.nHLayers + 1):
             if self.get_layers[n].get_w:
                 try:
-                    self.weights.append(self._sess.run(self.get_layers[n].get_w))
+                    self.weights.append(self.session.run(self.get_layers[n].get_w))
                 except FailedPreconditionError:
                     break
             else:
@@ -113,7 +120,7 @@ class Stacked_DAE(object):
         for n in xrange(self.nHLayers + 1):
             if self.get_layers[n].get_b:
                 try:
-                    self.biases.append(self._sess.run(self.get_layers[n].get_b))
+                    self.biases.append(self.session.run(self.get_layers[n].get_b))
                 except FailedPreconditionError:
                     break
             else:
@@ -122,8 +129,8 @@ class Stacked_DAE(object):
         return self.biases
     
     def get_activation(self, x, layer, use_fixed=True):
-        return self._sess.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
-#         return self._sess.run(tf.sigmoid(tf.nn.bias_add(tf.matmul(x, self.get_weights[layer]), self.get_biases[layer]), name='activate'))
+        return self.session.run(self.get_layers[layer].clean_activation(x_in=x, use_fixed=use_fixed))
+#         return self.session.run(tf.sigmoid(tf.nn.bias_add(tf.matmul(x, self.get_weights[layer]), self.get_biases[layer]), name='activate'))
 
     def train(self, cost, layer=None):
 #         with tf.name_scope("Training"):
@@ -146,9 +153,12 @@ class Stacked_DAE(object):
         train_op = optimizer.minimize(cost, global_step=global_step)
         return train_op, global_step
 
-    def calc_last_x(self, X):
+    def calc_last_x(self, X, bias_node=False):
         tmp = X
         for layer in self.get_layers:
+            if bias_node:
+                bias_n = tf.ones(shape=[FLAGS.batch_size, 1], dtype=tf.float32)
+                tmp = tf.concat(1, [bias_n, tmp])
             tmp = layer.clean_activation(x_in=tmp, use_fixed=False)
 #         print(tmp, self._net_shape[-2], self._net_shape[-1])
 #         dae_layer = DAE_Layer(in_data=tmp, prev_layer_size=self._net_shape[-2],
@@ -160,8 +170,8 @@ class Stacked_DAE(object):
         
         return tmp
 
-    def add_final_layer(self, input_x):
-        last_x = self.calc_last_x(input_x)
+    def add_final_layer(self, input_x, bias_node=False):
+        last_x = self.calc_last_x(input_x, bias_node=bias_node)
         print "Last layer added:", last_x.get_shape()
         return last_x
     
@@ -189,7 +199,7 @@ class Stacked_DAE(object):
             for _ in xrange(from_dataset.num_batches):
                 feed_dict = fill_feed_dict_dae(from_dataset, self.get_layers[layer]._x)
 
-                y = self._sess.run(self.get_layers[layer].clean_activation(), feed_dict=feed_dict)
+                y = self.session.run(self.get_layers[layer].clean_activation(), feed_dict=feed_dict)
                 for j in xrange(np.asarray(y).shape[0]):
                     self._y_dataset[layer].append(y[j])
                     
@@ -229,7 +239,7 @@ def pretrain_sdae(input_x, shape):
                 print("\n\n")
                 print "|  Layer   |   Epoch    |   Step   |    Loss    |"
                 
-                for step in xrange(FLAGS.pretraining_epochs * input_x.train.num_examples):
+                for step in xrange(FLAGS.pretraining_epochs):# * input_x.train.num_examples):
                     feed_dict = fill_feed_dict_dae(input_x.train, sdae._x)
     
                     loss, _ = sess.run([cost, train_op], feed_dict=feed_dict)
@@ -264,8 +274,8 @@ def pretrain_sdae(input_x, shape):
 
 def finetune_sdae(sdae, input_x, n_classes, label_map):
     print "Starting Fine-tuning..."
-    with sdae.session.graph.as_default():
-        sess = sdae.session
+    sess = sdae.session
+    with sess.graph.as_default():
         
         n_features = sdae._net_shape[0]
         
@@ -274,7 +284,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         labels = tf.identity(labels_pl)
         
         # Get the supervised fine tuning net
-        logits = sdae.add_final_layer(x_pl)
+        logits = sdae.add_final_layer(x_pl, bias_node=True)
 #         logits = sdae.finetune_net(input_x)
         loss = loss_supervised(logits, labels_pl, n_classes)
 
@@ -294,7 +304,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         
         sess.run(tf.initialize_all_variables())
         
-        steps = FLAGS.finetuning_epochs * input_x.train.num_examples
+        steps = FLAGS.finetuning_epochs# * input_x.train.num_examples
         for step in xrange(steps):
             start_time = time.time()
             

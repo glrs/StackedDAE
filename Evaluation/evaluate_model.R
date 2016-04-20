@@ -60,8 +60,11 @@ def_colors <- function(meta){
 }
 
 # # Handle several analysis functions 
-do_analysis <- function(act, w, b, outfile_pref){
+do_analysis <- function(act, w, b, outfile_pref, bias_node=FALSE){
     for(i in 1:length(w)){
+        if(bias_node == TRUE){
+            act <- cbind(rep(1, nrow(act)), act)
+        }
         act <- get_activations(t(act), w[[i]], b[[i]])
     #     print(act)
         nondup <- act[which(!duplicated(act)),]
