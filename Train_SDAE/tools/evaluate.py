@@ -44,7 +44,7 @@ def evaluation(logits, labels):
     # Return the number of true entries. Cast because originally is bool.
     return tf.reduce_sum(tf.cast(correct, tf.int32)), correct, y_p
 
-def predict(sdae, data_set):
+def predict(sdae, data_set, bias_node=False):
     with sdae.session.graph.as_default():
         labels_placeholder = tf.placeholder(tf.int32, shape=1,\
                                             name='labels_placeholder')
@@ -55,6 +55,9 @@ def predict(sdae, data_set):
         logits = tf.identity(examples_placeholder)
         
         for layer in sdae.get_layers:
+            if bias_node:
+                bias_n = tf.ones(shape=[1, 1], dtype=tf.float32)
+                logits = tf.concat(1, [bias_n, logits])
             logits = layer.clean_activation(x_in=logits, use_fixed=False)
             
         predictions = tf.argmax(logits, 1)
@@ -69,7 +72,7 @@ def predict(sdae, data_set):
                                        examples_placeholder,
                                        labels_placeholder, 1)
     
-            y_prediction, y_trues = sdae.sess.run([predictions, labels], feed_dict=feed_dict)
+            y_prediction, y_trues = sdae.session.run([predictions, labels], feed_dict=feed_dict)
             y_pred += list(y_prediction)
             y_true += list(y_trues)
             
