@@ -168,8 +168,9 @@ def main():
     del(data)
 
     
-    # Run Random Forest Before Finetuning
-    run_rf(norm_data, mapped_labels, sdae.get_weights, sdae.get_biases)
+    # Run Random Forest Before Finetuning ### np.insert(norm_data, 1, np.ones_like((norm_data[:,0])), 1)
+    run_rf(norm_data, mapped_labels, sdae.get_weights,\
+           sdae.get_biases, bias_node=True)
 
 
     # Load another dataset to test it on the created model
@@ -180,14 +181,16 @@ def main():
     
     data_an = normalize_data(data_an, transpose=False)
     data_an = np.transpose(data_an)
+#     data_an = np.insert(data_an, 1, np.ones_like((data_an[:,0])), 1)
     
     mapped_an_df, l_map = meta
     mapped_an_labs = np.reshape(mapped_an_df.values, (mapped_an_df.shape[0],))
 
     # Create comprehensive plots/graphs
     try:
-        analyze(sdae, data_an, labels_an, prefix='Foreign_Pretraining')
-        analyze(sdae, norm_orig, labels, prefix='Pretraining')
+        analyze(sdae, data_an, labels_an, bias_node=True, prefix='Foreign_Pretraining')
+        analyze(sdae, np.insert(norm_orig, 1, np.ones_like((norm_orig[:,0])), 1),\
+                labels, prefix='Pretraining')
     except:
         pass
 #     analyze(sdae, datafile_norm, recr_labels, prefix='recr_Pretraining')
@@ -209,7 +212,7 @@ def main():
 
 
     foreign_data = load_data_sets(data_an, mapped_an_labs, split_only=False)
-    p, t = predict(sdae, foreign_data.all)
+    p, t = predict(sdae, foreign_data.all, bias_node=True)
     p = pd.DataFrame(data=p).replace(l_map[:,1].tolist(), l_map[:,0].tolist())
     t = pd.DataFrame(data=t).replace(l_map[:,1].tolist(), l_map[:,0].tolist())
     print(p, t)
@@ -218,7 +221,8 @@ def main():
 
 
     # Run Random Forests After Finetuning for all layers
-    run_rf(norm_data, mapped_labels, sdae.get_weights, sdae.get_biases)
+    run_rf(norm_data, mapped_labels, sdae.get_weights,\
+           sdae.get_biases, bias_node=True)
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
 #     print("Random Forests After Finetuning for all layers:")
 
@@ -226,8 +230,10 @@ def main():
     # Create comprehensive plots/graphs
 #     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
     try:
-        analyze(sdae, data_an, labels_an, mapped_labels, prefix='Foreign_Finetuning')
-        analyze(sdae, norm_orig, labels, mapped_labels, prefix='Finetuning')
+        analyze(sdae, data_an, labels_an, mapped_labels, bias_node=True,\
+                prefix='Foreign_Finetuning')
+        analyze(sdae, norm_orig, labels, mapped_labels, bias_node=True,\
+                prefix='Finetuning')
     except:
         pass
 
@@ -235,7 +241,7 @@ def main():
     print_setup()
 
 
-def analyze(sdae, datafile_norm, labels, mapped_labels=None, prefix=None):
+def analyze(sdae, datafile_norm, labels, mapped_labels=None, bias_node=False, prefix=None):
     def_colors = robjects.globalenv['def_colors']
     do_analysis = robjects.globalenv['do_analysis']
 
@@ -244,7 +250,9 @@ def analyze(sdae, datafile_norm, labels, mapped_labels=None, prefix=None):
     act = np.float32(datafile_norm)
 
     try:
-        do_analysis(act, sdae.get_weights, sdae.get_biases, pjoin(FLAGS.output_dir, "{}_R_Layer_".format(prefix)))
+        do_analysis(act, sdae.get_weights, sdae.get_biases,\
+                    pjoin(FLAGS.output_dir, "{}_R_Layer_".format(prefix)),\
+                    bias_node=bias_node)
     except RRuntimeError as e:
         pass
 
