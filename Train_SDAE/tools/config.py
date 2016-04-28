@@ -13,7 +13,7 @@ def home_out(path):
 
 def web_out(path):
     # Just a quick manual flag for changes between local and remote VMs
-    if True:
+    if False:
         return pjoin(WEB_OUT, 'StackedDAE', path)
     else:
         return home_out(path)
@@ -23,10 +23,12 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 # Data Management
-flags.DEFINE_string('dataset', 'Allen', 'Choose which dataset you want to use')
+flags.DEFINE_string('dataset', 'Linarsson', 'Choose which dataset you want to use')
 flags.DEFINE_boolean('use_balanced', False, 'Use balanced data or not. If not existed they will be created.')
 
 # Autoencoder Architecture Specific Flags
+flags.DEFINE_boolean('bias_node', False, 'Whether to use or not a bias node in the network')
+
 flags.DEFINE_integer('num_hidden_layers', 3, 'Number of hidden layers')
 
 flags.DEFINE_integer('hidden1_units', 50, 'Number of units in hidden layer 1.')   # 2000

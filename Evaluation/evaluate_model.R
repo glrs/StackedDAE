@@ -47,7 +47,19 @@ def_colors <- function(meta){
     # Now 1st column is the former 2nd column. So we use this to take tha names
     typeNames <<- levels(meta[, colnames(meta)[1]])
 #     print(typeNames)
-    typeColors <<- rainbow(length(typeNames))
+
+## COLORS :  red=552, blue=26, black=24, green=254, yellow=652 --> change-to yellow2=654
+## COLORS :  orange=498 --> change-to darkorange1=91, brown=32 --> change-to chocolate4=56
+## COLORS :  purple=547, grey39=300, violetred=641, darkgreen=81, cyan=68, magenta=450
+## COLORS :  goldenrod4=151, hotpink=367, darkolivegreen2=87, midnightblue=477, lightcoral=404
+## COLORS :  darkslategrey=113, 
+
+    distinct_color_pool <- c("red","blue","black","green","yellow2","darkorange1",
+                            "chocolate4","purple","grey39","violetred","darkgreen",
+                            "cyan","magenta","goldenrod4","hotpink","darkolivegreen2",
+                            "midnightblue","midnightblue","darkslategrey")
+#     typeColors <<- rainbow(length(typeNames))
+    typeColors <<- distinct_color_pool[1:length(typeNames)]
 #     print(typeColors)
     names(typeColors) <<- typeNames
 #     print(typeColors)
@@ -59,7 +71,7 @@ def_colors <- function(meta){
 #     print(coi)
 }
 
-# # Handle several analysis functions 
+# # Handle several analysis functions
 do_analysis <- function(act, w, b, outfile_pref, bias_node=FALSE){
     for(i in 1:length(w)){
         if(bias_node == TRUE){
@@ -96,7 +108,7 @@ plot_pca <- function(act, colrs, outfile_pref){
     plot(p$x[,2:3], col=colrs, pch=20)
     par(mai=c(0,0,0,0))
     plot.new()
-    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=as.integer((length(typeColors)/10)+0.5), cex=0.8, pt.cex=0.8)
+    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=rep(20,length(typeColors)), ncol=as.integer((length(typeColors)/10)+0.5), cex=0.8, pt.cex=0.8)
     dev.off()
 }
 
@@ -112,7 +124,7 @@ plot_tsne <- function(act, colrs, outfile_pref){
     plot(r$Y, pch=20, col=colrs, xlab="", ylab="")
     par(mai=c(0,0,0,0))
     plot.new()
-    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=c(length(typeColors),20), ncol=as.integer((length(typeColors)/10)+0.5), cex=0.7, pt.cex=0.7)
+    legend("center", bty="n", legend=names(typeColors), col=typeColors, pch=rep(20,length(typeColors)), ncol=as.integer((length(typeColors)/10)+0.5), cex=0.7, pt.cex=0.7)
     dev.off()
 }
 
