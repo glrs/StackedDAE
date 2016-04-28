@@ -281,7 +281,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         labels = tf.identity(labels_pl)
         
         # Get the supervised fine tuning net
-        logits = sdae.add_final_layer(x_pl, bias_node=True)
+        logits = sdae.add_final_layer(x_pl, bias_node=FLAGS.bias_node)
 #         logits = sdae.finetune_net(input_x)
         loss = loss_supervised(logits, labels_pl, n_classes)
 

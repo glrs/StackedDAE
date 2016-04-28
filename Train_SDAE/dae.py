@@ -8,7 +8,7 @@ class DAE_Layer(object):
         self._is_last = last_layer
         self._layer = nth_layer
         
-        self._prev_layer_size = prev_layer_size + 1
+        self._prev_layer_size = prev_layer_size + 1 if FLAGS.bias_node else prev_layer_size
         self._next_layer_size = next_layer_size
         self._shape = [self._prev_layer_size, self._next_layer_size]
 

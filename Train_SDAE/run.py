@@ -90,6 +90,7 @@ def main():
     """
 
     # Set Hyper-parameters
+    bias_node = FLAGS.bias_node
     nHLay = FLAGS.num_hidden_layers
     nHUnits = [getattr(FLAGS, "hidden{0}_units".format(j + 1))\
                for j in xrange(nHLay)]
@@ -140,14 +141,16 @@ def main():
     start_time = time.time()
     norm_data = normalize_data(data, transpose=transp)
     
-    norm_orig = None
+#     norm_orig = None
     if transp:
         norm_orig = normalize_data(datafile, transpose=transp)
-
+    else:
+        norm_orig = norm_data
+    
     print("Data Normalized. Duration:", time.time() - start_time)
 
 
-    # Get the number of existed features (e.g. genes) in the data-set 
+    # Get the number of existed features (e.g. genes) in the data-set
     num_features = norm_data.shape[1]
 
     # Create the shape of the AutoEncoder
@@ -169,8 +172,8 @@ def main():
 
     
     # Run Random Forest Before Finetuning ### np.insert(norm_data, 1, np.ones_like((norm_data[:,0])), 1)
-    run_rf(norm_data, mapped_labels, sdae.get_weights,\
-           sdae.get_biases, bias_node=True)
+#     run_rf(norm_data, mapped_labels, sdae.get_weights,\
+#            sdae.get_biases, bias_node=bias_node)
 
 
     # Load another dataset to test it on the created model
@@ -178,19 +181,18 @@ def main():
     data_an, labels_an, meta = load_extra('Allen',\
                                           'TPM_common_ready_data.csv',\
                                           transpose=True, label_col=7)
-    
+     
     data_an = normalize_data(data_an, transpose=False)
     data_an = np.transpose(data_an)
 #     data_an = np.insert(data_an, 1, np.ones_like((data_an[:,0])), 1)
-    
+     
     mapped_an_df, l_map = meta
     mapped_an_labs = np.reshape(mapped_an_df.values, (mapped_an_df.shape[0],))
 
     # Create comprehensive plots/graphs
     try:
-        analyze(sdae, data_an, labels_an, bias_node=True, prefix='Foreign_Pretraining')
-        analyze(sdae, np.insert(norm_orig, 1, np.ones_like((norm_orig[:,0])), 1),\
-                labels, prefix='Pretraining')
+        analyze(sdae, data_an, labels_an, bias_node=bias_node, prefix='Foreign_Pretraining')
+        analyze(sdae, norm_orig, labels, bias_node=bias_node, prefix='Pretraining')
     except:
         pass
 #     analyze(sdae, datafile_norm, recr_labels, prefix='recr_Pretraining')
@@ -212,7 +214,7 @@ def main():
 
 
     foreign_data = load_data_sets(data_an, mapped_an_labs, split_only=False)
-    p, t = predict(sdae, foreign_data.all, bias_node=True)
+    p, t = predict(sdae, foreign_data.all, bias_node=bias_node)
     p = pd.DataFrame(data=p).replace(l_map[:,1].tolist(), l_map[:,0].tolist())
     t = pd.DataFrame(data=t).replace(l_map[:,1].tolist(), l_map[:,0].tolist())
     print(p, t)
@@ -222,7 +224,7 @@ def main():
 
     # Run Random Forests After Finetuning for all layers
     run_rf(norm_data, mapped_labels, sdae.get_weights,\
-           sdae.get_biases, bias_node=True)
+           sdae.get_biases, bias_node=bias_node)
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
 #     print("Random Forests After Finetuning for all layers:")
 
@@ -230,9 +232,9 @@ def main():
     # Create comprehensive plots/graphs
 #     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')
     try:
-        analyze(sdae, data_an, labels_an, mapped_labels, bias_node=True,\
+        analyze(sdae, data_an, labels_an, mapped_labels, bias_node=bias_node,\
                 prefix='Foreign_Finetuning')
-        analyze(sdae, norm_orig, labels, mapped_labels, bias_node=True,\
+        analyze(sdae, norm_orig, labels, mapped_labels, bias_node=bias_node,\
                 prefix='Finetuning')
     except:
         pass
@@ -284,7 +286,8 @@ def print_setup():
     noise_ratios = [getattr(FLAGS, "noise_{0}".format(i)) for i in xrange(1,nHLay+1)]
     print("\nConfiguration:")
     print("\n{: >45}\t".format("Dataset:"), FLAGS.dataset)
-    print("\n{: >45}\t".format("# Hidden Layers:"), nHLay)
+    print("\n{: >45}\t".format("Use Bias Node:"), FLAGS.bias_node)
+    print("{: >45}\t".format("# Hidden Layers:"), nHLay)
     print("{: >45}\t".format("# Hidden Units:"), nHUnits)
     print("{: >45}\t".format("Noise Ratio (per layer):"), [row[0] for row in noise_ratios])
     print("{: >45}\t".format("Noise Type (MN, SP, TFDO):"), [row[1] for row in noise_ratios])
