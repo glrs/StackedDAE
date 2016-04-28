@@ -67,27 +67,24 @@ class Stacked_DAE(object):
                 else:
                     if layer == 0:
                         x = self._x
-
                     else:
                         x = self._dae_layers[layer-1].clean_activation()
 #                         x = self._dae_layers[layer-1].get_representation_y
 
-                if not layer < self.nHLayers:
+                new_x = tf.identity(x)
+
+                if layer == self.nHLayers:
                     is_last_layer = True
-                    new_x = tf.identity(x)
-                else:
+
+                if FLAGS.bias_node and layer < self.nHLayers:
                     # Add bias node (experimental)
                     bias_node = tf.ones(shape=[FLAGS.batch_size, 1], dtype=tf.float32)
                     new_x = tf.concat(1, [bias_node, x])
-                    
-                    
-#                 if layer == self.nHLayers:
-#                     break
 
                 dae_layer = DAE_Layer(in_data=new_x, prev_layer_size=self._net_shape[layer],
                                       next_layer_size=self._net_shape[layer+1], nth_layer=layer+1,
                                       last_layer=is_last_layer)
-                
+
                 self._dae_layers.append(dae_layer)
 
     @property
@@ -97,7 +94,7 @@ class Stacked_DAE(object):
     @property
     def get_layers(self):
         return self._dae_layers
-    
+
     @property
     def get_weights(self):
 #         if len(self.weights) != self.nHLayers + 1:
@@ -239,7 +236,7 @@ def pretrain_sdae(input_x, shape):
                 print("\n\n")
                 print "|  Layer   |   Epoch    |   Step   |    Loss    |"
                 
-                for step in xrange(FLAGS.pretraining_epochs):# * input_x.train.num_examples):
+                for step in xrange(FLAGS.pretraining_epochs * input_x.train.num_examples):
                     feed_dict = fill_feed_dict_dae(input_x.train, sdae._x)
     
                     loss, _ = sess.run([cost, train_op], feed_dict=feed_dict)
@@ -304,7 +301,7 @@ def finetune_sdae(sdae, input_x, n_classes, label_map):
         
         sess.run(tf.initialize_all_variables())
         
-        steps = FLAGS.finetuning_epochs# * input_x.train.num_examples
+        steps = FLAGS.finetuning_epochs * input_x.train.num_examples
         for step in xrange(steps):
             start_time = time.time()
             
