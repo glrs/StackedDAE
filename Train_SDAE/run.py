@@ -136,7 +136,8 @@ def main():
                                           label_map[:,0].tolist())
 
     data = balanced_data if transp else datafile
-
+    del(balanced_data)
+    
     # Data Normalization
     start_time = time.time()
     norm_data = normalize_data(data, transpose=transp)
@@ -146,6 +147,8 @@ def main():
         norm_orig = normalize_data(datafile, transpose=transp)
     else:
         norm_orig = norm_data
+
+    del(datafile)
     
     print("Data Normalized. Duration:", time.time() - start_time)
 
@@ -178,14 +181,18 @@ def main():
 
     # Load another dataset to test it on the created model
 #     sub_labels, _ = load_linarsson_labels(sub_labels=True)
-    data_an, labels_an, meta = load_extra('Allen',\
-                                          'TPM_common_ready_data.csv',\
-                                          transpose=True, label_col=7)
-     
+#     data_an, labels_an, meta = load_extra('Allen',\
+#                                           'TPM_common_ready_data.csv',\
+#                                           transpose=True, label_col=7)
+    
+    data_an, labels_an, meta = load_extra('Lin-Allen',\
+                                          'Lin-Allen_compendium.csv',\
+                                          transpose=True, label_col=0)
+
     data_an = normalize_data(data_an, transpose=False)
     data_an = np.transpose(data_an)
 #     data_an = np.insert(data_an, 1, np.ones_like((data_an[:,0])), 1)
-     
+
     mapped_an_df, l_map = meta
     mapped_an_labs = np.reshape(mapped_an_df.values, (mapped_an_df.shape[0],))
 
@@ -197,7 +204,7 @@ def main():
         pass
 #     analyze(sdae, datafile_norm, recr_labels, prefix='recr_Pretraining')
 #     analyze(sdae, datafile_norm, sub_labels, mapped_labels, prefix='recr_Pretraining')
-    
+
 
 ###  ---  Fine-tuning Phase  ---  ###
 
@@ -212,6 +219,7 @@ def main():
                               n_classes=num_classes,\
                               label_map=label_map[:,0])
 
+    del(data)
 
     foreign_data = load_data_sets(data_an, mapped_an_labs, split_only=False)
     p, t = predict(sdae, foreign_data.all, bias_node=bias_node)
@@ -221,6 +229,7 @@ def main():
     p.to_csv(pjoin(FLAGS.output_dir, 'Predictions_of_Foreign.txt'), sep='\t')
     t.to_csv(pjoin(FLAGS.output_dir, 'True_labels_of_Foreign.txt'), sep='\t')
 
+    del(foreign_data)
 
     # Run Random Forests After Finetuning for all layers
     run_rf(norm_data, mapped_labels, sdae.get_weights,\
@@ -228,6 +237,7 @@ def main():
 #     run_rf(datafile_norm, mapped_labels, sdae.get_weights, sdae.get_biases, n_layers=nHLay)
 #     print("Random Forests After Finetuning for all layers:")
 
+    del(norm_data)
 
     # Create comprehensive plots/graphs
 #     analyze(sdae, datafile_norm, recr_labels, mapped_labels, prefix='recr_Finetuning')

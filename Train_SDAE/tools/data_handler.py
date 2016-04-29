@@ -244,5 +244,13 @@ def load_extra(dataset=None, filename=None, transpose=True, label_col=None, sub_
         data = load_linarsson_data('filtered', transpose=transpose)
         labels, meta = load_linarsson_labels(sub_labels)
         return data, labels, meta
+    elif dataset == 'Lin-Allen':
+        labels = pd.read_csv(pjoin(FLAGS.data_dir, 'Lin-Allen_comp_labels.csv'), sep='\t', index_col=0)
+        data = pd.read_csv(pjoin(FLAGS.data_dir, filename), sep='\t', index_col=0)
+        
+        if transpose:
+            data = data.transpose()
+        return np.array(data), labels[[label_col]], label_metadata(label_matrix=labels, label_col=label_col)
+        
 
         
